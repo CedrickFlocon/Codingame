@@ -9,6 +9,7 @@ import java.math.*
  **/
 fun main(args: Array<String>) {
     val input = Scanner(System.`in`)
+    var decelerateCount = 0
 
     // game loop
     while (true) {
@@ -33,7 +34,11 @@ fun main(args: Array<String>) {
         System.err.println("$nextCheckpointAngle")
         System.err.println("$nextCheckpointDist")
 
-        if (nextCheckpointDist > 5000) {
+        if (nextCheckpointDist < 1000 && decelerateCount < 2){
+            decelerateCount++
+            println("$nextCheckpointX $nextCheckpointY 0")
+        } else if (nextCheckpointDist > 5000) {
+            decelerateCount = 0
             when (nextCheckpointAngle) {
                 in -10..10 -> println("$nextCheckpointX $nextCheckpointY 100")
                 in -20..20 -> println("$nextCheckpointX $nextCheckpointY 95")
@@ -45,6 +50,7 @@ fun main(args: Array<String>) {
                 else -> println("$nextCheckpointX $nextCheckpointY 65")
             }
         } else {
+            decelerateCount = 0
             when (nextCheckpointAngle) {
                 in -5..5 -> println("$nextCheckpointX $nextCheckpointY 100")
                 in -10..10 -> println("$nextCheckpointX $nextCheckpointY 95")
