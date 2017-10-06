@@ -1,7 +1,4 @@
-
 import java.util.*
-import java.io.*
-import java.math.*
 
 /**
  * Auto-generated code below aims at helping you parse
@@ -9,59 +6,57 @@ import java.math.*
  **/
 fun main(args: Array<String>) {
     val input = Scanner(System.`in`)
-    var decelerateCount = 0
+    var move: Move
+    var game = Game(
+            Coordinate(0, 0),
+            Checkpoint(Coordinate(0, 0), 0, 0),
+            Coordinate(0, 0),
+            true)
 
     // game loop
     while (true) {
-        val x = input.nextInt()
-        val y = input.nextInt()
-        val nextCheckpointX = input.nextInt() // x position of the next check point
-        val nextCheckpointY = input.nextInt() // y position of the next check point
-        val nextCheckpointDist = input.nextInt() // distance to the next checkpoint
-        val nextCheckpointAngle = input.nextInt() // angle between your pod orientation and the direction of the next checkpoint
-        val opponentX = input.nextInt()
-        val opponentY = input.nextInt()
+        game = game.copy(
+                position = Coordinate(input.nextInt(), input.nextInt()),
+                nextCheckPoint = Checkpoint(Coordinate(input.nextInt(), input.nextInt()), input.nextInt(), input.nextInt()),
+                opponent = Coordinate(input.nextInt(), input.nextInt()))
 
-        // Write an action using println()
-        // To debug: System.err.println("Debug messages...");
+        System.err.println("$game")
 
+        move = Move(game.nextCheckPoint.coordinate)
 
-        // You have to output the target position
-        // followed by the power (0 <= thrust <= 100)
-        // i.e.: "x y thrust"
-
-
-        System.err.println("$nextCheckpointAngle")
-        System.err.println("$nextCheckpointDist")
-
-        if (nextCheckpointDist < 1000 && decelerateCount < 2){
-            decelerateCount++
-            println("$nextCheckpointX $nextCheckpointY 0")
-        } else if (nextCheckpointDist > 5000) {
-            decelerateCount = 0
-            when (nextCheckpointAngle) {
-                in -10..10 -> println("$nextCheckpointX $nextCheckpointY 100")
-                in -20..20 -> println("$nextCheckpointX $nextCheckpointY 95")
-                in -30..30 -> println("$nextCheckpointX $nextCheckpointY 90")
-                in -50..40 -> println("$nextCheckpointX $nextCheckpointY 85")
-                in -60..60 -> println("$nextCheckpointX $nextCheckpointY 80")
-                in -70..70 -> println("$nextCheckpointX $nextCheckpointY 75")
-                in -80..80 -> println("$nextCheckpointX $nextCheckpointY 70")
-                else -> println("$nextCheckpointX $nextCheckpointY 65")
-            }
+        if (game.nextCheckPoint.angle == 0 && game.nextCheckPoint.distance > 5000 && game.boostAvailable) {
+            move.thrust = "BOOST"
+            game.boostAvailable = false
         } else {
-            decelerateCount = 0
-            when (nextCheckpointAngle) {
-                in -5..5 -> println("$nextCheckpointX $nextCheckpointY 100")
-                in -10..10 -> println("$nextCheckpointX $nextCheckpointY 95")
-                in -15..15 -> println("$nextCheckpointX $nextCheckpointY 90")
-                in -20..20 -> println("$nextCheckpointX $nextCheckpointY 85")
-                in -25..25 -> println("$nextCheckpointX $nextCheckpointY 80")
-                in -30..30 -> println("$nextCheckpointX $nextCheckpointY 75")
-                in -35..35 -> println("$nextCheckpointX $nextCheckpointY 70")
-                else -> println("$nextCheckpointX $nextCheckpointY 65")
+            when (game.nextCheckPoint.angle) {
+                in -90..90 -> move.thrust = "100"
+                else -> move.thrust = "5"
             }
         }
+
+        println(move.move())
+    }
+
+}
+
+data class Game(val position: Coordinate, val nextCheckPoint: Checkpoint, val opponent: Coordinate, var boostAvailable: Boolean) {
+    override fun toString(): String {
+        return "position : ${position.x}:${position.y} \n" +
+                "checkpoint : ${nextCheckPoint.coordinate.x}:${nextCheckPoint.coordinate.y} ${nextCheckPoint.distance} ${nextCheckPoint.angle}°"
+    }
+}
+
+data class Checkpoint(val coordinate: Coordinate, val distance: Int, val angle: Int)
+
+data class Coordinate(val x: Int, val y: Int)
+
+data class Move(private val coordinate: Coordinate, var thrust: String? = null) {
+
+    fun move(): String {
+        if (thrust == null){
+            throw IllegalStateException("You must init thrust before moving")
+        }
+        return "${coordinate.x} ${coordinate.y} $thrust"
     }
 
 }
