@@ -1,0 +1,45 @@
+import groovy.io.FileType
+
+subprojects {
+    task buildSingleFile << {
+        def outputDir = new File("$buildDir/codingame/")
+        def outputFile = new File("$buildDir/codingame/codingame.kt")
+        def sourceSetFile = new File(sourceSets.main.kotlin.srcDirs[0].toString())
+        def bestPackage = "org.neige.codingame"
+
+        if (!outputDir.exists()) {
+            outputDir.mkdirs()
+        }
+
+        if (outputFile.exists()) {
+            outputFile.delete()
+        }
+        outputFile.createNewFile()
+
+        def importLine = new ArrayList()
+        def codeLine = new ArrayList()
+
+        sourceSetFile.eachFileRecurse(FileType.FILES) {
+            if (it.name.endsWith(".kt")){
+                it.readLines().each {
+                    if (it.startsWith("import")) {
+                        if (!importLine.contains(it) && !it.contains(bestPackage)) {
+                            importLine.add(it)
+                        }
+                    } else if (!it.startsWith("package")){
+                        codeLine.add(it)
+                    }
+                }
+            }
+        }
+
+        importLine.each {
+            outputFile << it + "\n"
+        }
+
+        codeLine.each {
+            outputFile << it + "\n"
+        }
+
+    }
+}
