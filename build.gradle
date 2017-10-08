@@ -1,5 +1,47 @@
 import groovy.io.FileType
 
+buildscript {
+    ext.junit = '1.0.1'
+    ext.spec = '1.1.5'
+    ext.mockito = '2.10.0'
+    ext.assertj = '3.8.0'
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.junit.platform:junit-platform-gradle-plugin:$junit"
+    }
+}
+
+//Spec setup
+subprojects {
+    apply plugin: 'org.junit.platform.gradle.plugin'
+
+    junitPlatform {
+        filters {
+            engines {
+                include 'spek'
+            }
+        }
+    }
+
+    repositories {
+        jcenter()
+        maven { url "http://dl.bintray.com/jetbrains/spek" }
+    }
+
+    dependencies {
+        testRuntime("org.junit.platform:junit-platform-launcher:$junit")
+        testCompile("org.jetbrains.spek:spek-api:$spec")
+        testRuntime("org.jetbrains.spek:spek-junit-platform-engine:$spec")
+        testRuntime("org.assertj:assertj-core:$assertj")
+        testCompile("org.mockito:mockito-core:$mockito")
+    }
+
+}
+
+//Build single file
 subprojects {
     task buildSingleFile << {
         def outputDir = new File("$buildDir/codingame/")
@@ -20,13 +62,13 @@ subprojects {
         def codeLine = new ArrayList()
 
         sourceSetFile.eachFileRecurse(FileType.FILES) {
-            if (it.name.endsWith(".kt")){
+            if (it.name.endsWith(".kt")) {
                 it.readLines().each {
                     if (it.startsWith("import")) {
                         if (!importLine.contains(it) && !it.contains(bestPackage)) {
                             importLine.add(it)
                         }
-                    } else if (!it.startsWith("package")){
+                    } else if (!it.startsWith("package")) {
                         codeLine.add(it)
                     }
                 }
