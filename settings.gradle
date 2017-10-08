@@ -1,4 +1,5 @@
 rootProject.name = 'Codingame'
 include 'Coders Strike Back'
 findProject(':Coders Strike Back')?.name = 'CodersStrikeBack'
+include 'Puzzle'
 
