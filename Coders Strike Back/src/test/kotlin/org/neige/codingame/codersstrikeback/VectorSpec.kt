@@ -9,7 +9,7 @@ import org.jetbrains.spek.api.dsl.on
 object VectorSpec : Spek({
 
     given("a vector 100;100") {
-        val u = Vector(100.0, 100.0)
+        val u = Scalar(100.0, 100.0)
 
         on("check angle") {
             val angle = u.angle()
@@ -21,24 +21,38 @@ object VectorSpec : Spek({
         on("inverse") {
             val inverse = u.inverse()
             it("should be -100;-100") {
-                assertThat(inverse).isEqualTo(Vector(-100.0, -100.0))
+                assertThat(inverse).isEqualTo(Scalar(-100.0, -100.0))
+            }
+        }
+
+        on("add friction") {
+            val v = u * 0.5
+            it("should be reduce by half") {
+                assertThat(v).isEqualTo(Scalar(50.0, 50.0))
+            }
+        }
+
+        on("divide in 100") {
+            val v = u / 100.0
+            it("should be a 1;1 vector") {
+                assertThat(v).isEqualTo(Scalar(1.0, 1.0))
             }
         }
 
         given("a vector -100;-100") {
-            val v = Vector(-100.0, -100.0)
+            val v = Scalar(-100.0, -100.0)
 
             on("addition") {
                 val vector = u + v
                 it("should be null") {
-                    assertThat(vector).isEqualTo(Vector(0.0, 0.0))
+                    assertThat(vector).isEqualTo(Scalar(0.0, 0.0))
                 }
             }
 
             on("subtraction") {
                 val subtraction = u - v
                 it("should be equals to 200;200") {
-                    assertThat(subtraction).isEqualTo(Vector(200.0, 200.0))
+                    assertThat(subtraction).isEqualTo(Scalar(200.0, 200.0))
                 }
 
                 on("absolute magnitude") {
@@ -66,19 +80,19 @@ object VectorSpec : Spek({
         }
 
         given("a vector 100;100") {
-            val v = Vector(100.0, 100.0)
+            val v = Scalar(100.0, 100.0)
 
             on("addition") {
                 val vector = u + v
                 it("should be 200;200") {
-                    assertThat(vector).isEqualTo(Vector(200.0, 200.0))
+                    assertThat(vector).isEqualTo(Scalar(200.0, 200.0))
                 }
             }
 
             on("subtraction") {
                 val subtraction = u - v
                 it("should be equals to 0;0") {
-                    assertThat(subtraction).isEqualTo(Vector(0.0, 0.0))
+                    assertThat(subtraction).isEqualTo(Scalar(0.0, 0.0))
                 }
 
                 on("absolute magnitude") {
@@ -91,7 +105,7 @@ object VectorSpec : Spek({
         }
 
         given("a vector 100;-100") {
-            val v = Vector(100.0, -100.0)
+            val v = Scalar(100.0, -100.0)
 
             on("angle") {
                 val angle = u.angle(v)
@@ -104,7 +118,7 @@ object VectorSpec : Spek({
     }
 
     given("a vector 0;100") {
-        val u = Vector(0.0, 100.0)
+        val u = Scalar(0.0, 100.0)
 
         on("check angle") {
             val angle = u.angle()
@@ -115,7 +129,7 @@ object VectorSpec : Spek({
     }
 
     given("a vector 0;-100") {
-        val u = Vector(0.0, -100.0)
+        val u = Scalar(0.0, -100.0)
 
         on("check angle") {
             val angle = u.angle()
@@ -126,7 +140,7 @@ object VectorSpec : Spek({
     }
 
     given("a vector 100;0") {
-        val u = Vector(100.0, 0.0)
+        val u = Scalar(100.0, 0.0)
 
         on("check angle") {
             val angle = u.angle()
@@ -137,7 +151,7 @@ object VectorSpec : Spek({
     }
 
     given("a vector -100;0") {
-        val u = Vector(-100.0, 0.0)
+        val u = Scalar(-100.0, 0.0)
 
         on("check angle") {
             val angle = u.angle()
@@ -151,9 +165,9 @@ object VectorSpec : Spek({
         val a = Coordinate(-4.0, -3.0)
         val b = Coordinate(1.0, 5.0)
         on("construction") {
-            val v = Vector(a, b)
+            val v = Scalar(a, b)
             it("should be equals to 5;8") {
-                assertThat(v).isEqualTo(Vector(5.0, 8.0))
+                assertThat(v).isEqualTo(Scalar(5.0, 8.0))
             }
         }
     }

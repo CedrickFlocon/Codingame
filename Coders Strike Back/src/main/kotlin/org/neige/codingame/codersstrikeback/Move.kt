@@ -1,11 +1,8 @@
 package org.neige.codingame.codersstrikeback
 
-data class Move(private val coordinate: Coordinate, var thrust: String? = null) {
+data class Move(val coordinate: Coordinate, val thrust: String) {
 
-    fun move(): String {
-        if (thrust == null) {
-            throw IllegalStateException("You must init thrust before moving")
-        }
+    override fun toString(): String {
         return "${coordinate.x.toInt()} ${coordinate.y.toInt()} $thrust"
     }
 

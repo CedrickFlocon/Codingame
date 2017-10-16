@@ -2,175 +2,146 @@ package org.neige.codingame.codersstrikeback
 
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.spek.api.Spek
+import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
-import org.mockito.BDDMockito
-import org.mockito.Mockito.*
+import org.mockito.BDDMockito.given
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
+import org.neige.codingame.codersstrikeback.pod.Ally
+import org.neige.codingame.codersstrikeback.pod.Pod
 import java.util.*
 
 object GameSpec : Spek({
 
     given("Game 1 start") {
-        val scanner = Scanner(this::class.java.classLoader.getResourceAsStream("input_race_1"))
-        val myPod = mock(Pod::class.java)
-        val opponentPod = mock(Pod::class.java)
-        val move = Move(Coordinate(0.0, 0.0))
-        move.thrust = "100"
-        BDDMockito.given(myPod.move(any(Coordinate::class.java) ?: Coordinate(0.0, 0.0), anyBoolean(), anyInt(), any() ?: Pod()))
-                .willReturn(move)
-        val game = Game(myPod, opponentPod, scanner)
+        val scanner = Scanner(this::class.java.classLoader.getResourceAsStream("input_one_step.txt"))
+        val pod1 = mock(Ally::class.java)
+        val pod2 = mock(Ally::class.java)
 
-        on("first step") {
+        val opponent1 = mock(Pod::class.java)
+        val opponent2 = mock(Pod::class.java)
+
+        val checkpoints = listOf(Checkpoint(Coordinate(14657.0, 1416.0)),
+                Checkpoint(Coordinate(5284.0, 4297.0)),
+                Checkpoint(Coordinate(8348.0, 1789.0)))
+
+        val game = Game(scanner, 3, checkpoints)
+        game.init(listOf(pod1, pod2), listOf(opponent1, opponent2))
+
+        on("next step") {
             game.nextStep()
 
-            it("should have a new position") {
-                verify(myPod).position = Coordinate(11661.0, 3154.0)
-            }
-            it("should have a new opponent position") {
-                verify(opponentPod).position = Coordinate(10923.0, 2478.0)
-            }
-            it("should have a checkpoint information") {
-                assertThat(game.nextCheckpoint.x).isEqualTo(7492.0)
-                assertThat(game.nextCheckpoint.y).isEqualTo(6966.0)
-            }
-            it("should have memorised one checkpoint") {
-                assertThat(game.allCheckpoint).hasSize(1)
-                assertThat(game.allCheckpoint[0].x).isEqualTo(7492.0)
-                assertThat(game.allCheckpoint[0].y).isEqualTo(6966.0)
-            }
-            it("should move the pod") {
-                verify(myPod).move(game.nextCheckpoint, false, 0, opponentPod)
+            it("should update pod1") {
+                verify(pod1).coordinate = Coordinate(5937.0, 3740.0)
+                verify(pod1).speed = Scalar(82.0, -21.0)
+                verify(pod1).angle = 345
+                verify(pod1).nextCheckpoint = Checkpoint(Coordinate(14657.0, 1416.0))
             }
 
-            it("shouldn't finish a lap") {
-                assertThat(game.lap).isEqualTo(1)
+            it("should update pod2") {
+                verify(pod2).coordinate = Coordinate(6243.0, 4680.0)
+                verify(pod2).speed = Scalar(79.0, -30.0)
+                verify(pod2).angle = 339
+                verify(pod2).nextCheckpoint = Checkpoint(Coordinate(14657.0, 1416.0))
+            }
+
+            it("should update opponent1") {
+                verify(opponent1).coordinate = Coordinate(5629.0, 2800.0)
+                verify(opponent1).speed = Scalar(84.0, -12.0)
+                verify(opponent1).angle = 351
+                verify(opponent1).nextCheckpoint = Checkpoint(Coordinate(14657.0, 1416.0))
+            }
+
+            it("should update opponent2") {
+                verify(opponent2).coordinate = Coordinate(6549.0, 5621.0)
+                verify(opponent2).speed = Scalar(75.0, -39.0)
+                verify(opponent2).angle = 333
+                verify(opponent2).nextCheckpoint = Checkpoint(Coordinate(14657.0, 1416.0))
             }
         }
 
-        on("second step") {
-            game.nextStep()
+        on("play") {
+            val move2 = mock(Move::class.java)
+            val move1 = mock(Move::class.java)
+            given(pod1.move()).willReturn(move1)
+            given(pod2.move()).willReturn(move2)
 
-            it("should have a new position") {
-                verify(myPod).position = Coordinate(11181.0, 3593.0)
-            }
-            it("should have a new opponent position") {
-                verify(opponentPod).position = Coordinate(10528.0, 2994.0)
-            }
-            it("should have the same checkpoint but a different distance") {
-                assertThat(game.nextCheckpoint.x).isEqualTo(7492.0)
-                assertThat(game.nextCheckpoint.y).isEqualTo(6966.0)
-                verify(myPod, times(2)).move(game.nextCheckpoint, false, 0, opponentPod)
-            }
-        }
+            val play = game.play()
 
-        on("first checkpoint reach") {
-            for (i in 1..8) {
-                game.nextStep()
+            it("should call pod1 move") {
+                assertThat(play[0]).isEqualTo(move1)
             }
 
-            it("should have a new position") {
-                verify(myPod).position = Coordinate(7681.0, 7356.0)
-            }
-            it("should have a new opponent position") {
-                verify(opponentPod).position = Coordinate(7091.0, 6793.0)
-            }
-            it("should have the same checkpoint but a different distance") {
-                assertThat(game.nextCheckpoint.x).isEqualTo(5985.0)
-                assertThat(game.nextCheckpoint.y).isEqualTo(5355.0)
-            }
-            it("should move the pod") {
-                verify(myPod).move(game.nextCheckpoint, false, 50, opponentPod)
-            }
-            it("should have memorised two checkpoint") {
-                assertThat(game.allCheckpoint).hasSize(2)
-                assertThat(game.allCheckpoint[0].x).isEqualTo(7492.0)
-                assertThat(game.allCheckpoint[0].y).isEqualTo(6966.0)
-                assertThat(game.allCheckpoint[1].x).isEqualTo(5985.0)
-                assertThat(game.allCheckpoint[1].y).isEqualTo(5355.0)
-            }
-            it("shouldn't finish a lap") {
-                assertThat(game.lap).isEqualTo(1)
-            }
-            it("should move the pod") {
-                verify(myPod).move(Coordinate(5985.0, 5355.0), false, 50, opponentPod)
+            it("should call pod2 move") {
+                assertThat(play[1]).isEqualTo(move2)
             }
 
         }
 
-        on("first lap") {
-            for (i in 1..28) {
-                game.nextStep()
+        describe("next checkpoint") {
+
+            on("find next checkpoint of the 1st") {
+                val nextCheckpoint = game.nextCheckpoint(checkpoints[0])
+
+                it("should return the 2nd checkpoint") {
+                    assertThat(nextCheckpoint).isEqualTo(checkpoints[1])
+                }
             }
 
-            it("should memorise three checkpoint") {
-                assertThat(game.allCheckpoint).hasSize(3)
-                assertThat(game.allCheckpoint[0].x).isEqualTo(7492.0)
-                assertThat(game.allCheckpoint[0].y).isEqualTo(6966.0)
-                assertThat(game.allCheckpoint[1].x).isEqualTo(5985.0)
-                assertThat(game.allCheckpoint[1].y).isEqualTo(5355.0)
-                assertThat(game.allCheckpoint[2].x).isEqualTo(11292.0)
-                assertThat(game.allCheckpoint[2].y).isEqualTo(2816.0)
-            }
-            it("should finish one lap") {
-                assertThat(game.lap).isEqualTo(2)
-            }
-            it("should move the pod") {
-                verify(myPod).move(Coordinate(7492.0, 6966.0), false, 81, opponentPod)
+            on("find next checkpoint of the 3rd") {
+                val nextCheckpoint = game.nextCheckpoint(checkpoints[2])
+
+                it("should return the 1st checkpoint") {
+                    assertThat(nextCheckpoint).isEqualTo(checkpoints[0])
+                }
             }
         }
 
-        on("farthest checkpoint") {
-            for (i in 1..34) {
-                game.nextStep()
+        describe("previous checkpoint") {
+
+            on("find previous checkpoint of the 1st") {
+                val nextCheckpoint = game.previousCheckpoint(checkpoints[0])
+
+                it("should return the 3rd checkpoint") {
+                    assertThat(nextCheckpoint).isEqualTo(checkpoints[2])
+                }
             }
 
-            it("should move the pod") {
-                verify(myPod).move(Coordinate(11292.0, 2816.0), true, -87, opponentPod)
+            on("find previous checkpoint of the 3rd") {
+                val nextCheckpoint = game.previousCheckpoint(checkpoints[2])
+
+                it("should return the 2nd checkpoint") {
+                    assertThat(nextCheckpoint).isEqualTo(checkpoints[1])
+                }
             }
         }
 
-        on("second lap") {
-            for (i in 1..14) {
-                game.nextStep()
+        describe("is farthest") {
+            on("is first checkpoint is farthest one") {
+                val farthestCheckpoint = game.isFarthestCheckpoint(checkpoints[0])
+                it("should be false") {
+                    assertThat(farthestCheckpoint).isFalse()
+                }
             }
-            it("should finish the second lap") {
-                assertThat(game.lap).isEqualTo(3)
+
+            on("is second checkpoint is farthest one") {
+                val farthestCheckpoint = game.isFarthestCheckpoint(checkpoints[1])
+                it("should be true") {
+                    assertThat(farthestCheckpoint).isTrue()
+                }
             }
+
+            on("is third checkpoint is farthest one") {
+                val farthestCheckpoint = game.isFarthestCheckpoint(checkpoints[2])
+                it("should be false") {
+                    assertThat(farthestCheckpoint).isFalse()
+                }
+            }
+
         }
 
-        on("last step") {
-            for (i in 1..59) {
-                game.nextStep()
-            }
-
-            it("should have a new position") {
-                verify(myPod).position = Coordinate(11197.0, 3557.0)
-            }
-            it("should have a new opponent position") {
-                verify(opponentPod).position = Coordinate(9494.0, 1881.0)
-            }
-            it("should have a checkpoint information") {
-                assertThat(game.nextCheckpoint.x).isEqualTo(11292.0)
-                assertThat(game.nextCheckpoint.y).isEqualTo(2816.0)
-            }
-            it("should move the pod") {
-                verify(myPod).move(game.nextCheckpoint, true, -20, opponentPod)
-            }
-
-            it("should memorise three checkpoint") {
-                assertThat(game.allCheckpoint).hasSize(3)
-                assertThat(game.allCheckpoint[0].x).isEqualTo(7492.0)
-                assertThat(game.allCheckpoint[0].y).isEqualTo(6966.0)
-                assertThat(game.allCheckpoint[1].x).isEqualTo(5985.0)
-                assertThat(game.allCheckpoint[1].y).isEqualTo(5355.0)
-                assertThat(game.allCheckpoint[2].x).isEqualTo(11292.0)
-                assertThat(game.allCheckpoint[2].y).isEqualTo(2816.0)
-            }
-            it("should still be the second lap") {
-                assertThat(game.lap).isEqualTo(3)
-            }
-        }
     }
 
 })

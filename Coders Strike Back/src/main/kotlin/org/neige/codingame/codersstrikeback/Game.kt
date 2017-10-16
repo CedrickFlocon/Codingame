@@ -1,50 +1,70 @@
 package org.neige.codingame.codersstrikeback
 
+import org.neige.codingame.codersstrikeback.pod.Ally
+import org.neige.codingame.codersstrikeback.pod.Pod
 import java.util.*
 
-class Game(private val myPod: Pod, private val opponentPod: Pod, private val input: Scanner) {
+class Game(private val input: Scanner,
+           private val laps: Int, private val checkpoints: List<Checkpoint>) {
 
-    var nextCheckpoint = Coordinate(0.0, 0.0)
+    var pods = emptyList<Ally>()
         private set
-    var currentCheckpoint: Coordinate? = null
-        private set
-    var allCheckpoint = emptyList<Coordinate>()
-        private set
-    var lap = 1
+    var opponents = emptyList<Pod>()
         private set
 
-    fun nextStep() {
-        myPod.position = Coordinate(input.nextDouble(), input.nextDouble())
-        val nextCheckpoint = Coordinate(input.nextDouble(), input.nextDouble())
-        val distance = input.nextInt()
-        val angle = input.nextInt()
-        opponentPod.position = Coordinate(input.nextDouble(), input.nextDouble())
+    fun init(pods: List<Ally>, opponent: List<Pod>) {
+        this.pods = pods
+        this.opponents = opponent
+    }
 
-        if (this.nextCheckpoint != nextCheckpoint && allCheckpoint.isNotEmpty()) {
-            currentCheckpoint = this.nextCheckpoint
-            if (allCheckpoint[0] == nextCheckpoint) {
-                lap++
-            }
+    fun nextStep(): Boolean {
+        pods.forEach { readInput(it) }
+        opponents.forEach { readInput(it) }
+
+        return true
+    }
+
+    private fun readInput(pod: Pod) {
+        pod.coordinate = Coordinate(input.nextDouble(), input.nextDouble())
+        pod.speed = Scalar(input.nextDouble(), input.nextDouble())
+        pod.angle = input.nextInt()
+        pod.nextCheckpoint = checkpoints[input.nextInt()]
+    }
+
+    fun play(): List<Move> {
+        return pods.map { it.move() }
+    }
+
+    /**
+     * Find the next checkpoint
+     */
+    fun nextCheckpoint(checkpoint: Checkpoint): Checkpoint {
+        val checkpointIndex = checkpoints.indexOf(checkpoint)
+        return if (checkpointIndex == checkpoints.size - 1) {
+            checkpoints[0]
+        } else {
+            checkpoints[checkpointIndex + 1]
         }
+    }
 
-        if (!allCheckpoint.contains(nextCheckpoint)) {
-            allCheckpoint += nextCheckpoint
+    /**
+     * Find the previous checkpoint
+     */
+    fun previousCheckpoint(checkpoint: Checkpoint): Checkpoint {
+        val checkpointIndex = checkpoints.indexOf(checkpoint)
+        return if (checkpointIndex == 0) {
+            checkpoints[checkpoints.size - 1]
+        } else {
+            checkpoints[checkpointIndex - 1]
         }
-
-        this.nextCheckpoint = nextCheckpoint
-
-        println(myPod.move(nextCheckpoint, isFarthestCheckpoint(), angle, opponentPod).move())
     }
 
-    private fun isFarthestCheckpoint(): Boolean {
-        if (lap < 2) return false
-        val currentCheckpoint = this.currentCheckpoint ?: return false
-        val distanceBetweenCurrentCheckpoint = currentCheckpoint.distanceFrom(getNextCheckpoint(currentCheckpoint))
-
-        return allCheckpoint.none { distanceBetweenCurrentCheckpoint < it.distanceFrom(getNextCheckpoint(it)) }
+    /**
+     * Check if the farthest checkpoint
+     */
+    fun isFarthestCheckpoint(checkpoint: Checkpoint): Boolean {
+        val distanceBetweenCurrentCheckpoint = checkpoint.coordinate.distanceFrom(previousCheckpoint(checkpoint).coordinate)
+        return checkpoints.none { it.coordinate.distanceFrom(nextCheckpoint(it).coordinate) > distanceBetweenCurrentCheckpoint }
     }
 
-    private fun getNextCheckpoint(coordinate: Coordinate): Coordinate {
-        return if (allCheckpoint.indexOf(coordinate) == allCheckpoint.size - 1) allCheckpoint[0] else allCheckpoint[allCheckpoint.indexOf(coordinate) + 1]
-    }
 }

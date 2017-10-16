@@ -19,19 +19,27 @@ object CoordinateSpec : Spek({
         }
 
         given("a vector 50;50") {
-            val v = Vector(50.0, 50.0)
+            val v = Scalar(50.0, 50.0)
 
-            on("addition to the vector") {
+            on("subtraction to the vector") {
                 val coordinate = origin - v
 
                 it("should be equals to 50;50") {
                     assertThat(coordinate).isEqualTo(Coordinate(50.0, 50.0))
                 }
             }
+
+            on("addition to the vector") {
+                val coordinate = origin + v
+
+                it("should be equals to 150;150") {
+                    assertThat(coordinate).isEqualTo(Coordinate(150.0, 150.0))
+                }
+            }
         }
 
         given("a vector -50;50") {
-            val v = Vector(-50.0, 50.0)
+            val v = Scalar(-50.0, 50.0)
 
             on("addition to the vector") {
                 val coordinate = origin - v
