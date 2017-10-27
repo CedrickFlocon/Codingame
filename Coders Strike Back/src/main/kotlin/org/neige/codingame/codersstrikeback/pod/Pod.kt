@@ -38,8 +38,8 @@ abstract class Pod(val game: Game, open var coordinate: Coordinate, open var spe
                 return true
             }
 
-            opponentPosition += (pod.speed * FRICTION) / 400.0
-            myPosition += (speed * FRICTION) / 400.0
+            opponentPosition += pod.speed / 400.0
+            myPosition += speed / 400.0
         }
 
         return false

@@ -46,7 +46,7 @@ object RunnerSpec : Spek({
                 val move = runner.move()
 
                 it("should move without a boost") {
-                    assertThat(move).isEqualTo(Move(runner.nextCheckpoint.coordinate - runner.speed, "100"))
+                    assertThat(move).isEqualTo(Move(runner.nextCheckpoint.coordinate - runner.speed, "200"))
                 }
             }
         }
@@ -62,7 +62,7 @@ object RunnerSpec : Spek({
                     val move = runner.move()
 
                     it("should move without a boost") {
-                        assertThat(move).isEqualTo(Move(runner.getBestPath(runner.nextCheckpoint), "100"))
+                        assertThat(move).isEqualTo(Move(runner.getBestPath(runner.nextCheckpoint), "200"))
                     }
                 }
             }
@@ -83,7 +83,7 @@ object RunnerSpec : Spek({
                         val move = runner.move()
 
                         it("should move without a boost") {
-                            assertThat(move).isEqualTo(Move(runner.getBestPath(runner.nextCheckpoint), "100"))
+                            assertThat(move).isEqualTo(Move(runner.getBestPath(runner.nextCheckpoint), "200"))
                         }
                     }
                 }
@@ -105,7 +105,7 @@ object RunnerSpec : Spek({
                         val move = runner.move()
 
                         it("should move without a boost") {
-                            assertThat(move).isEqualTo(Move(runner.getBestPath(runner.nextCheckpoint), "100"))
+                            assertThat(move).isEqualTo(Move(runner.getBestPath(runner.nextCheckpoint), "200"))
                         }
                     }
                 }
@@ -181,6 +181,22 @@ object RunnerSpec : Spek({
             }
         }
 
+        describe("a game bug runner collide opponent2") {
+            beforeEachTest {
+                given(opponent2.coordinate).willReturn(Coordinate(8312.0, 2959.0))
+                given(opponent2.speed).willReturn(Scalar(-359.0, -111.0))
+                runner.coordinate = Coordinate(7023.0, 2429.0)
+                runner.speed = Scalar(344.0, 19.0)
+            }
+
+            on("move") {
+                val move = runner.move()
+                it("should shield") {
+                    assertThat(move).isEqualTo(Move(runner.getBestPath(runner.nextCheckpoint), "SHIELD"))
+                }
+            }
+        }
+
         describe("a runner will not collide opponent") {
             beforeGroup {
                 runner.coordinate = Coordinate(1000.0, 1000.0)
@@ -190,7 +206,7 @@ object RunnerSpec : Spek({
             on("move") {
                 val move = runner.move()
                 it("should keep moving") {
-                    assertThat(move).isEqualTo(Move(runner.getBestPath(runner.nextCheckpoint), "100"))
+                    assertThat(move).isEqualTo(Move(runner.getBestPath(runner.nextCheckpoint), "200"))
                 }
             }
         }
