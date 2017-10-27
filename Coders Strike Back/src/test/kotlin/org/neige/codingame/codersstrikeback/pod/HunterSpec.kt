@@ -21,7 +21,14 @@ object HunterSpec : Spek({
         given("two opponent") {
             val opponent1 = mock(Pod::class.java)
             val opponent2 = mock(Pod::class.java)
-            beforeGroup {
+            beforeEachTest {
+                given(opponent1.coordinate).willReturn(Coordinate(0.0, 0.0))
+                given(opponent1.speed).willReturn(Scalar(0.0, 0.0))
+                given(opponent1.nextCheckpoint).willReturn(Checkpoint(Coordinate(0.0, 0.0)))
+                given(opponent2.coordinate).willReturn(Coordinate(0.0, 0.0))
+                given(opponent2.speed).willReturn(Scalar(0.0, 0.0))
+                hunter.coordinate = Coordinate(0.0, 0.0)
+                hunter.speed = Scalar(0.0, 0.0)
                 given(game.opponents).willReturn(listOf(opponent1, opponent2))
             }
 
@@ -46,7 +53,7 @@ object HunterSpec : Spek({
                 }
 
                 given("a game input") {
-                    beforeGroup {
+                    beforeEachTest {
                         given(opponent1.coordinate).willReturn(Coordinate(7162.0, 5059.0))
                         given(opponent1.speed).willReturn(Scalar(28.0, 448.0))
                         given(opponent2.coordinate).willReturn(Coordinate(0.0, 0.0))
@@ -66,69 +73,74 @@ object HunterSpec : Spek({
             }
 
             given("opponent1 in first position") {
-                beforeGroup {
+                beforeEachTest {
                     given(opponent1.compareTo(opponent2)).willReturn(1)
                 }
 
-                given("hunter following the opponent1") {
-                    val opponentNextCheckpoint = Checkpoint(Coordinate(-3000.0, 0.0))
-
-                    beforeGroup {
-                        given(opponent1.coordinate).willReturn(Coordinate(1000.0, 0.0))
-                        given(opponent1.speed).willReturn(Scalar(10.0, 10.0))
-                        given(opponent1.nextCheckpoint).willReturn(Checkpoint(Coordinate(2000.0, 0.0)))
-                        given(opponent2.coordinate).willReturn(Coordinate(0.0, 0.0))
-                        given(opponent2.speed).willReturn(Scalar(0.0, 0.0))
-                        given(game.nextCheckpoint(opponent1.nextCheckpoint)).willReturn(opponentNextCheckpoint)
-                        hunter.coordinate = Coordinate(500.0, 0.0)
-                        hunter.speed = Scalar(10.0, 10.0)
+                given("hunter  behind opponent1") {
+                    beforeEachTest {
+                        given(opponent1.coordinate).willReturn(Coordinate(1000.0, 1000.0))
+                        given(opponent1.nextCheckpoint).willReturn(Checkpoint(Coordinate(2000.0, 2000.0)))
+                        hunter.coordinate = Coordinate(500.0, 500.0)
                     }
 
-                    on("move") {
-                        val move = hunter.move()
-                        it("should go to next checkpoint of the opponent1") {
-                            assertThat(move).isEqualTo(Move(opponentNextCheckpoint.coordinate, "100"))
+                    given("hunter far from opponent next checkpoint") {
+                        val opponentNextCheckpoint = Checkpoint(Coordinate(10000.0, 0.0))
+                        beforeEachTest {
+                            given(game.nextCheckpoint(opponent1.nextCheckpoint)).willReturn(opponentNextCheckpoint)
+                        }
+
+                        on("move") {
+                            val move = hunter.move()
+                            it("should go to next checkpoint of the opponent1 faster") {
+                                assertThat(move).isEqualTo(Move(opponentNextCheckpoint.coordinate, "200"))
+                            }
                         }
                     }
-                }
 
-                given("hunter close to the next opponent1 checkpoint") {
-                    val opponentNextCheckpoint = Checkpoint(Coordinate(-1000.0, 0.0))
+                    given("hunter close to opponent next checkpoint") {
+                        val opponentNextCheckpoint = Checkpoint(Coordinate(3500.0, 500.0))
+                        beforeEachTest {
+                            given(game.nextCheckpoint(opponent1.nextCheckpoint)).willReturn(opponentNextCheckpoint)
+                        }
 
-                    beforeGroup {
-                        given(opponent1.coordinate).willReturn(Coordinate(1000.0, 0.0))
-                        given(opponent1.speed).willReturn(Scalar(10.0, 10.0))
-                        given(opponent1.nextCheckpoint).willReturn(Checkpoint(Coordinate(2000.0, 0.0)))
-                        given(opponent2.coordinate).willReturn(Coordinate(0.0, 0.0))
-                        given(opponent2.speed).willReturn(Scalar(0.0, 0.0))
-                        given(game.nextCheckpoint(opponent1.nextCheckpoint)).willReturn(opponentNextCheckpoint)
-                        hunter.coordinate = Coordinate(-1000.0, 0.0)
-                        hunter.speed = Scalar(10.0, 10.0)
-                    }
-
-                    on("move") {
-                        val move = hunter.move()
-                        it("should wait the opponent1") {
-                            assertThat(move).isEqualTo(Move(opponent1.coordinate, "0"))
+                        on("move") {
+                            val move = hunter.move()
+                            it("should go to next checkpoint of the opponent1 slower") {
+                                assertThat(move).isEqualTo(Move(opponentNextCheckpoint.coordinate, "100"))
+                            }
                         }
                     }
+
+                    given("hunter at the opponent next checkpoint") {
+                        val opponentNextCheckpoint = Checkpoint(Coordinate(700.0, 700.0))
+                        beforeEachTest {
+                            given(game.nextCheckpoint(opponent1.nextCheckpoint)).willReturn(opponentNextCheckpoint)
+                        }
+
+                        on("move") {
+                            val move = hunter.move()
+                            it("should wait opponent1") {
+                                assertThat(move).isEqualTo(Move(opponent1.coordinate, "0"))
+                            }
+                        }
+                    }
+
                 }
 
                 given("hunter ahead of the opponent1") {
-                    beforeGroup {
+                    beforeEachTest {
                         given(opponent1.coordinate).willReturn(Coordinate(1000.0, 0.0))
-                        given(opponent1.speed).willReturn(Scalar(10.0, 10.0))
+                        given(opponent1.speed).willReturn(Scalar(150.0, 70.0))
                         given(opponent1.nextCheckpoint).willReturn(Checkpoint(Coordinate(-1000.0, 0.0)))
-                        given(opponent2.coordinate).willReturn(Coordinate(0.0, 0.0))
-                        given(opponent2.speed).willReturn(Scalar(0.0, 0.0))
                         hunter.coordinate = Coordinate(-1000.0, 0.0)
-                        hunter.speed = Scalar(10.0, 10.0)
+                        hunter.speed = Scalar(-10.0, 10.0)
                     }
 
                     on("move") {
                         val move = hunter.move()
                         it("charge the opponent1") {
-                            assertThat(move).isEqualTo(Move(opponent1.coordinate, "100"))
+                            assertThat(move).isEqualTo(Move(opponent1.coordinate + (opponent1.speed - hunter.speed) * 3.0, "200"))
                         }
                     }
                 }

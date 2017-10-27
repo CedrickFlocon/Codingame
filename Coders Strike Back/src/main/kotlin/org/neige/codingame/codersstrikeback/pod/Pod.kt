@@ -38,8 +38,8 @@ abstract class Pod(val game: Game, open var coordinate: Coordinate, open var spe
                 return true
             }
 
-            opponentPosition += (pod.speed * FRICTION) / 400.0
-            myPosition += (speed * FRICTION) / 400.0
+            opponentPosition += pod.speed / 400.0
+            myPosition += speed / 400.0
         }
 
         return false
@@ -49,7 +49,7 @@ abstract class Pod(val game: Game, open var coordinate: Coordinate, open var spe
      * Find the best path to reached the coordinate
      */
     fun getBestPath(checkpoint: Checkpoint): Coordinate {
-        return checkpoint.coordinate - speed * 3.0
+        return checkpoint.coordinate - speed * 4.0
     }
 
     override fun compareTo(other: Pod): Int {
