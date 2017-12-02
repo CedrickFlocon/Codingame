@@ -12,7 +12,7 @@ import org.mockito.Mockito.mock
 object PlayerSpec : Spek({
 
     given("a player") {
-        val player = Player(0, 12, 5)
+        val player = Player(0, 12, 5, 1, 3)
 
         given("a board with a box") {
             val box = mock(Box::class.java)
@@ -21,7 +21,7 @@ object PlayerSpec : Spek({
             val y = 6
             given(box.x).willReturn(x)
             given(box.y).willReturn(y)
-            given(board.getClosetedBox(player)).willReturn(box)
+            given(board.getClosestBox(player)).willReturn(box)
 
             given("this box as a neighbour") {
                 beforeGroup {
@@ -54,7 +54,7 @@ object PlayerSpec : Spek({
 
         given("a board without a box") {
             val board = mock(Board::class.java)
-            given(board.getClosetedBox(player)).willReturn(null)
+            given(board.getClosestBox(player)).willReturn(null)
 
             on("play") {
                 val action = player.play(board)
