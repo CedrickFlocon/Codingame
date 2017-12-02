@@ -13,7 +13,7 @@ class Board(private val scanner: Scanner, private val width: Int, private val he
 
         for (y in 0 until height) {
             scanner.next().forEachIndexed { x, c ->
-                if (c == '0') {
+                if (c != '.') {
                     addBox(Box(x, y))
                 }
             }
