@@ -13,7 +13,7 @@ object LocatedSpec : Spek({
         val located = Coordinate(2, 3)
 
         given("an other located") {
-            val other = Box(1, 5)
+            val other = Box(1, 5, ItemType.NONE)
 
             on("distance between") {
                 val distanceBetween = located.distanceBetween(other)
@@ -54,5 +54,3 @@ object LocatedSpec : Spek({
     }
 
 })
-
-data class Coordinate(override val x: Int, override val y: Int) : Located

@@ -5,15 +5,33 @@ data class Player(override val id: Int, override val x: Int, override val y: Int
 
     fun play(board: Board): Action {
         val closetedBox = board.getClosestBox(this)
+
         return if (closetedBox == null) {
-            Action("MOVE", 0, 0)
+            Action(Action.Command.MOVE, Coordinate(0, 0))
+        } else if (board.timerToExplode(this) != null) {
+            Action(Action.Command.MOVE, board.getClosestSafePlace(this) ?: Coordinate(0, 0), "Safe Place")
         } else {
-            val type = if (closetedBox.checkNeighbour(this)) {
-                "BOMB"
+            if (closetedBox.checkNeighbour(this)) {
+                Action(Action.Command.BOMB, closetedBox)
             } else {
-                "MOVE"
+                val accessiblePath = board.getAccessiblePath(this)
+                var closetedNeighbour: Located? = null
+                for (located in accessiblePath) {
+                    if (closetedBox.checkNeighbour(located) && (closetedNeighbour == null || located.distanceBetween(this) < closetedNeighbour.distanceBetween(this))) {
+                        closetedNeighbour = located
+                    }
+                }
+
+                val pathTo = board.buildPathTo(this, closetedNeighbour!!)
+
+                val path = pathTo.minBy { it.size }!!
+                if (board.timerToExplode(path[1]) == null) {
+                    Action(Action.Command.MOVE, path[1], "Move to closest box")
+                }
             }
-            return Action(type, closetedBox.x, closetedBox.y)
+
+            Action(Action.Command.MOVE, this, "Motionless")
         }
     }
+
 }

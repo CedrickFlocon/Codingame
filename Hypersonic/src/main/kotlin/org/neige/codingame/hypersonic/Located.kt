@@ -10,8 +10,12 @@ interface Located {
         return Math.abs(located.x - x) + Math.abs(located.y - y)
     }
 
-    fun checkNeighbour(coordinate: Located): Boolean {
-        return (coordinate.y == y && coordinate.x in x - 1..x + 1).xor((coordinate.x == x && coordinate.y in y - 1..y + 1))
+    fun checkNeighbour(located: Located): Boolean {
+        return (located.y == y && located.x in x - 1..x + 1).xor((located.x == x && located.y in y - 1..y + 1))
+    }
+
+    fun sameLocated(located: Located): Boolean {
+        return located.y == y && located.x == x
     }
 
 }

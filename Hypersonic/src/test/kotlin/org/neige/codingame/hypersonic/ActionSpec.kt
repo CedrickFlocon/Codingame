@@ -14,8 +14,7 @@ object ActionSpec : Spek({
     given("a move action") {
         val x = 2
         val y = 3
-        val type = "MOVE"
-        val action = Action(type, x, y)
+        val action = Action(Action.Command.MOVE, Coordinate(x, y))
 
         on("play") {
             val out = System.out
@@ -25,7 +24,7 @@ object ActionSpec : Spek({
             System.setOut(out)
 
             it("should print \"MOVE 2 3\"") {
-                assertThat(outContent.toString()).isEqualTo("$type $x $y\n")
+                assertThat(outContent.toString()).isEqualTo("MOVE $x $y\n")
             }
         }
     }
@@ -33,8 +32,7 @@ object ActionSpec : Spek({
     given("a bomb action") {
         val x = 7
         val y = 14
-        val type = "BOMB"
-        val action = Action(type, x, y)
+        val action = Action(Action.Command.BOMB, Coordinate(x, y))
 
         on("play") {
             val out = System.out
@@ -44,7 +42,7 @@ object ActionSpec : Spek({
             System.setOut(out)
 
             it("should print \"BOMB 7 14\"") {
-                assertThat(outContent.toString()).isEqualTo("$type $x $y\n")
+                assertThat(outContent.toString()).isEqualTo("BOMB $x $y\n")
             }
         }
     }
