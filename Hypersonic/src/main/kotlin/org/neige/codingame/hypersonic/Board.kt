@@ -5,7 +5,7 @@ import java.util.*
 
 class Board(private val scanner: Scanner, private val width: Int, private val height: Int) {
 
-    private val grid = Array(width, { i -> Array<Located>(height, { j -> Floor(i, j) }) })
+    private val grid = Array(width) { i -> Array<Located>(height) { j -> Floor(i, j) } }
     private val players = mutableMapOf<Int, Player>()
 
     fun nextTurn() {

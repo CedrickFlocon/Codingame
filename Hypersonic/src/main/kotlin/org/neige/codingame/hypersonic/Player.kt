@@ -6,13 +6,26 @@ data class Player(override val id: Int, override val x: Int, override val y: Int
     fun play(board: Board): Action {
         val closetedBox = board.getClosestBox(this)
 
-        return if (closetedBox == null) {
-            Action(Action.Command.MOVE, Coordinate(0, 0))
-        } else if (board.timerToExplode(this) != null) {
-            Action(Action.Command.MOVE, board.getClosestSafePlace(this) ?: Coordinate(0, 0), "Safe Place")
+        val playerExplosionTimer = board.timerToExplode(this)
+        return if (playerExplosionTimer != null) { // we can walk into explosion
+            val closestSafePlace = board.getClosestSafePlace(this)
+            if (closestSafePlace != null) {
+                Action(Action.Command.MOVE, closestSafePlace, "Safe Place")
+            } else {
+                val higherTimerPlace = board.getAccessiblePath(this).maxBy { board.timerToExplode(it) ?: 0 }
+                if (higherTimerPlace != null && playerExplosionTimer == board.timerToExplode(higherTimerPlace)) {
+                    Action(Action.Command.MOVE, this, "Don't move for now")
+                } else if (higherTimerPlace != null) {
+                    Action(Action.Command.MOVE, higherTimerPlace, "We have time")
+                } else {
+                    Action(Action.Command.MOVE, Coordinate(0, 0), "No safe place")
+                }
+            }
+        } else if (closetedBox == null) {
+            Action(Action.Command.MOVE, Coordinate(0, 0), "No box accessible")
         } else {
             if (closetedBox.checkNeighbour(this)) {
-                Action(Action.Command.BOMB, closetedBox)
+                Action(Action.Command.BOMB, closetedBox, "let's destroy this box")
             } else {
                 val accessiblePath = board.getAccessiblePath(this)
                 var closetedNeighbour: Located? = null
@@ -22,15 +35,16 @@ data class Player(override val id: Int, override val x: Int, override val y: Int
                     }
                 }
 
-                val pathTo = board.buildPathTo(this, closetedNeighbour!!)
+                val pathTo = board.buildPathTo(this, closetedNeighbour!!) // To long
 
                 val path = pathTo.minBy { it.size }!!
-                if (board.timerToExplode(path[1]) == null) {
+
+                if (board.timerToExplode(path[1]) == null) { //could go to dead end
                     Action(Action.Command.MOVE, path[1], "Move to closest box")
+                } else {
+                    Action(Action.Command.MOVE, this, "Motionless But destination ${path[1]}")
                 }
             }
-
-            Action(Action.Command.MOVE, this, "Motionless")
         }
     }
 
