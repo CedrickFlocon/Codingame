@@ -1,6 +1,9 @@
 # Codingame
 [Codingame](http://codingame.com/) solution
 
+# Build single file
+`./gradlew :module:buildSingleFile`
+
 # License
     Copyright © 2015 Cédrick Flocon
     This work is free. You can redistribute it and/or modify it under the
