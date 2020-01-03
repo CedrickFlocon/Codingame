@@ -7,22 +7,35 @@ data class Player(override val id: Int, override val x: Int, override val y: Int
         val closetedBox = board.getClosestBox(this)
 
         val playerExplosionTimer = board.timerToExplode(this)
-        return if (playerExplosionTimer != null) { // we can walk into explosion
+        return if (playerExplosionTimer != null) {
             val closestSafePlace = board.getClosestSafePlace(this)
+
             if (closestSafePlace != null) {
-                Action(Action.Command.MOVE, closestSafePlace, "Safe Place")
+                val countElementType = board.countAccessibleElementType(this, Floor::class)
+                if (countElementType < 50) {
+                    val pathTo = board.buildPathTo(this, closestSafePlace)
+                    val path = pathTo.minBy { it.size }!!
+                    val timerToExplode = board.timerToExplode(path[1])
+                    if (timerToExplode == null || timerToExplode > 2) {
+                        Action(Action.Command.MOVE, path[1], "Safe Place")
+                    } else {
+                        Action(Action.Command.MOVE, this, "Don't move for now")
+                    }
+                } else {
+                    Action(Action.Command.MOVE, closestSafePlace, "Safe Place")
+                }
             } else {
                 val higherTimerPlace = board.getAccessiblePath(this).maxBy { board.timerToExplode(it) ?: 0 }
-                if (higherTimerPlace != null && playerExplosionTimer == board.timerToExplode(higherTimerPlace)) {
+                if (higherTimerPlace == null || playerExplosionTimer > board.timerToExplode(higherTimerPlace) ?: 0) {
                     Action(Action.Command.MOVE, this, "Don't move for now")
-                } else if (higherTimerPlace != null) {
-                    Action(Action.Command.MOVE, higherTimerPlace, "We have time")
                 } else {
-                    Action(Action.Command.MOVE, Coordinate(0, 0), "No safe place")
+                    Log.debug("Position timer : $playerExplosionTimer")
+                    Log.debug("higher timer place : $higherTimerPlace | Timer : ${board.timerToExplode(higherTimerPlace)}")
+                    Action(Action.Command.MOVE, higherTimerPlace, "We have time")
                 }
             }
         } else if (closetedBox == null) {
-            Action(Action.Command.MOVE, Coordinate(0, 0), "No box accessible")
+            Action(Action.Command.MOVE, this, "No box accessible")
         } else {
             if (closetedBox.checkNeighbour(this)) {
                 Action(Action.Command.BOMB, closetedBox, "let's destroy this box")
@@ -36,7 +49,6 @@ data class Player(override val id: Int, override val x: Int, override val y: Int
                 }
 
                 val countElementType = board.countAccessibleElementType(this, Floor::class)
-                Log.debug("Accessible Floor number : $countElementType")
                 if (countElementType < 50) {
                     val pathTo = board.buildPathTo(this, closetedNeighbour!!)
 
@@ -48,7 +60,12 @@ data class Player(override val id: Int, override val x: Int, override val y: Int
                         Action(Action.Command.MOVE, this, "Motionless But destination ${path[1]}")
                     }
                 } else {
-                    Action(Action.Command.MOVE, closetedBox, "Move to closest box")
+                    val neighbourWillExplode = board.getNeighbour(this).find { board.timerToExplode(it) != null }
+                    if (neighbourWillExplode != null) {
+                        Action(Action.Command.MOVE, this, "Motionless neighbour will explode $neighbourWillExplode")
+                    } else {
+                        Action(Action.Command.MOVE, closetedBox, "Move to closest box")
+                    }
                 }
             }
         }

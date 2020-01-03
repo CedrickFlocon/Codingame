@@ -206,6 +206,15 @@ class Board(private val scanner: Scanner, private val width: Int, private val he
         return getAccessiblePath(located).count { types.contains(it::class) }
     }
 
+    fun getNeighbour(located: Located): List<Located> {
+        return listOf<Located>(
+                Coordinate(located.x + 1, located.y),
+                Coordinate(located.x - 1, located.y),
+                Coordinate(located.x, located.y + 1),
+                Coordinate(located.x, located.y - 1)
+        ).filter { it.x >= 0 && it.y >= 0 && it.x < width && it.y < height }.apply { this.forEach { Log.debug(it.toString()) } }
+    }
+
     private fun addElement(element: Located) {
         grid[element.x][element.y] = element
     }
