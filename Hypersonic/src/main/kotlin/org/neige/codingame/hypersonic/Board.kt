@@ -1,6 +1,7 @@
 package org.neige.codingame.hypersonic
 
 import java.util.*
+import kotlin.reflect.KClass
 
 
 class Board(private val scanner: Scanner, private val width: Int, private val height: Int) {
@@ -187,6 +188,22 @@ class Board(private val scanner: Scanner, private val width: Int, private val he
         }
 
         return paths
+    }
+
+    fun <T> countElementType(vararg types: KClass<T>): Int where T : Located {
+        var count = 0
+        for (row in grid) {
+            for (located in row) {
+                if (types.contains(located::class)) {
+                    count++
+                }
+            }
+        }
+        return count
+    }
+
+    fun <T> countAccessibleElementType(located: Located, vararg types: KClass<T>): Int where T : Located {
+        return getAccessiblePath(located).count { types.contains(it::class) }
     }
 
     private fun addElement(element: Located) {

@@ -35,14 +35,20 @@ data class Player(override val id: Int, override val x: Int, override val y: Int
                     }
                 }
 
-                val pathTo = board.buildPathTo(this, closetedNeighbour!!) // To long
+                val countElementType = board.countAccessibleElementType(this, Floor::class)
+                Log.debug("Accessible Floor number : $countElementType")
+                if (countElementType < 50) {
+                    val pathTo = board.buildPathTo(this, closetedNeighbour!!)
 
-                val path = pathTo.minBy { it.size }!!
+                    val path = pathTo.minBy { it.size }!!
 
-                if (board.timerToExplode(path[1]) == null) { //could go to dead end
-                    Action(Action.Command.MOVE, path[1], "Move to closest box")
+                    if (board.timerToExplode(path[1]) == null) { //could go to dead end
+                        Action(Action.Command.MOVE, path[1], "Move to closest box by path")
+                    } else {
+                        Action(Action.Command.MOVE, this, "Motionless But destination ${path[1]}")
+                    }
                 } else {
-                    Action(Action.Command.MOVE, this, "Motionless But destination ${path[1]}")
+                    Action(Action.Command.MOVE, closetedBox, "Move to closest box")
                 }
             }
         }
