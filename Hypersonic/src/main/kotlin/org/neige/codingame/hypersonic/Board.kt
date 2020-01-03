@@ -1,6 +1,8 @@
 package org.neige.codingame.hypersonic
 
 import java.util.*
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.reflect.KClass
 
 
@@ -32,7 +34,7 @@ class Board(private val scanner: Scanner, private val width: Int, private val he
             val param2 = scanner.nextInt()
 
             when (entityType) {
-                0 -> players.put(owner, Player(owner, x, y, param1, param2))
+                0 -> players[owner] = Player(owner, x, y, param1, param2)
                 1 -> addElement(Bomb(owner, x, y, param1, param2))
                 2 -> addElement(Item(x, y, if (param1 == 1) ItemType.EXTRA_RANGE else ItemType.EXTRA_BOMB))
             }
@@ -81,20 +83,20 @@ class Board(private val scanner: Scanner, private val width: Int, private val he
         return safePlace
     }
 
-    fun timerToExplode(located: Located, bombsChecked: List<Bomb> = emptyList()): Int? {
+    fun timerToExplode(located: Located, fictitiousGrid: Array<Array<Located>> = grid, bombsChecked: List<Bomb> = emptyList()): Int? {
         val bombs = mutableListOf<Bomb>()
         bombs.addAll(bombsChecked)
         var minTimer: Int? = null
 
-        if (grid[located.x][located.y] is Bomb) {
-            minTimer = (grid[located.x][located.y] as Bomb).timer
+        if (fictitiousGrid[located.x][located.y] is Bomb) {
+            minTimer = (fictitiousGrid[located.x][located.y] as Bomb).timer
         }
 
         for (it in located.x - 1 downTo 0) {
-            val element = grid[it][located.y]
+            val element = fictitiousGrid[it][located.y]
             if (element is Bomb && !bombs.contains(element) && element.range > located.distanceBetween(element)) {
                 bombs.add(element)
-                minTimer = minOf(minTimer ?: element.timer, element.timer, timerToExplode(element, bombs) ?: element.timer)
+                minTimer = minOf(minTimer ?: element.timer, element.timer, timerToExplode(element, fictitiousGrid, bombs) ?: element.timer)
             }
             if (element !is Floor) {
                 break
@@ -102,10 +104,10 @@ class Board(private val scanner: Scanner, private val width: Int, private val he
         }
 
         for (it in located.x + 1 until width) {
-            val element = grid[it][located.y]
+            val element = fictitiousGrid[it][located.y]
             if (element is Bomb && !bombs.contains(element) && element.range > located.distanceBetween(element)) {
                 bombs.add(element)
-                minTimer = minOf(minTimer ?: element.timer, element.timer, timerToExplode(element, bombs) ?: element.timer)
+                minTimer = minOf(minTimer ?: element.timer, element.timer, timerToExplode(element, fictitiousGrid, bombs) ?: element.timer)
             }
             if (element !is Floor) {
                 break
@@ -113,10 +115,10 @@ class Board(private val scanner: Scanner, private val width: Int, private val he
         }
 
         for (it in located.y - 1 downTo 0) {
-            val element = grid[located.x][it]
+            val element = fictitiousGrid[located.x][it]
             if (element is Bomb && !bombs.contains(element) && element.range > located.distanceBetween(element)) {
                 bombs.add(element)
-                minTimer = minOf(minTimer ?: element.timer, element.timer, timerToExplode(element, bombs) ?: element.timer)
+                minTimer = minOf(minTimer ?: element.timer, element.timer, timerToExplode(element, fictitiousGrid, bombs) ?: element.timer)
             }
             if (element !is Floor) {
                 break
@@ -124,10 +126,10 @@ class Board(private val scanner: Scanner, private val width: Int, private val he
         }
 
         for (it in located.y + 1 until height) {
-            val element = grid[located.x][it]
+            val element = fictitiousGrid[located.x][it]
             if (element is Bomb && !bombs.contains(element) && element.range > located.distanceBetween(element)) {
                 bombs.add(element)
-                minTimer = minOf(minTimer ?: element.timer, element.timer, timerToExplode(element, bombs) ?: element.timer)
+                minTimer = minOf(minTimer ?: element.timer, element.timer, timerToExplode(element, fictitiousGrid, bombs) ?: element.timer)
             }
             if (element !is Floor) {
                 break
@@ -159,13 +161,38 @@ class Board(private val scanner: Scanner, private val width: Int, private val he
         return paths
     }
 
+    fun shortestPath(from: Located, to: Located): List<Located> {
+        val validLocation = mutableListOf<List<Located>>(mutableListOf(from))
+
+        if (from.sameLocated(to)) {
+            return emptyList()
+        }
+
+        while (true) {
+            val copy = validLocation.toMutableList()
+            validLocation.clear()
+            for (path in copy) {
+                for (located in getNeighbour(path[path.size - 1]).filter { path.find { pathLocation -> pathLocation.sameLocated(it) } == null }) {
+                    if (getGridElement(located) !is Box && getGridElement(located) !is Bomb && getGridElement(located) !is Wall) {
+                        validLocation.add(path + located)
+                        if (to.sameLocated(located)) {
+                            val shortestPath = (path + located).toMutableList()
+                            shortestPath.removeAt(0)
+                            return shortestPath
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun getAccessiblePath(located: Located, pathsChecked: List<Located> = emptyList()): List<Located> {
         val paths = mutableListOf<Located>()
 
         val element = getGridElement(located)
-        if (element is Floor || element is Item) {
+        if (pathsChecked.isEmpty() || element is Floor || element is Item || located is Player) {
             paths.add(element)
-        } else if (located !is Player) {
+        } else {
             return emptyList()
         }
 
@@ -173,6 +200,7 @@ class Board(private val scanner: Scanner, private val width: Int, private val he
         if (located.x > 0 && !(paths + pathsChecked).contains(getGridElement(leftCoordinate))) {
             paths.addAll(getAccessiblePath(leftCoordinate, paths + pathsChecked))
         }
+
         val rightCoordinate = Coordinate(located.x + 1, located.y)
         if (located.x < width - 1 && !(paths + pathsChecked).contains(getGridElement(rightCoordinate))) {
             paths.addAll(getAccessiblePath(rightCoordinate, paths + pathsChecked))
@@ -188,6 +216,67 @@ class Board(private val scanner: Scanner, private val width: Int, private val he
         }
 
         return paths
+    }
+
+    fun destroyableBoxNumber(located: Located, bombRange: Int): Int {
+        var boxNumber = 0
+
+        for (x in located.x + 1..min(located.x + bombRange, width - 1)) {
+            if (grid[x][located.y] is Box && timerToExplode(Coordinate(x, located.y)) == null) {
+                boxNumber++
+                break
+            } else if (grid[x][located.y] !is Floor) {
+                break
+            }
+        }
+
+        for (x in located.x - 1 downTo max(located.x - bombRange, 0)) {
+            if (grid[x][located.y] is Box && timerToExplode(Coordinate(x, located.y)) == null) {
+                boxNumber++
+                break
+            } else if (grid[x][located.y] !is Floor) {
+                break
+            }
+        }
+
+        for (y in located.y + 1..min(located.y + bombRange, height - 1)) {
+            if (grid[located.x][y] is Box && timerToExplode(Coordinate(located.x, y)) == null) {
+                boxNumber++
+                break
+            } else if ((grid[located.x][y] !is Floor)) {
+                break
+            }
+        }
+
+        for (y in located.y - 1 downTo max(located.y - bombRange, 0)) {
+            if (grid[located.x][y] is Box && timerToExplode(Coordinate(located.x, y)) == null) {
+                boxNumber++
+                break
+            } else if (grid[located.x][y] !is Floor) {
+                break
+            }
+        }
+
+        return boxNumber
+    }
+
+    fun isDeadEnd(located: Located): Boolean {
+        return getAccessiblePath(located).none { timerToExplode(it) == null } || getGridElement(located) is Bomb
+    }
+
+    fun isSuicide(located: Located, fictiveBomb: Bomb): Boolean {
+        val old = grid[fictiveBomb.x][fictiveBomb.y]
+        grid[fictiveBomb.x][fictiveBomb.y] = fictiveBomb
+
+        val timer = getAccessiblePath(located).map { timerToExplode(it) }.distinct()
+
+        grid[fictiveBomb.x][fictiveBomb.y] = old
+
+        return if (timer.find { it == null } != null) {
+            false
+        } else {
+            timer.size == 1
+        }
     }
 
     fun <T> countElementType(vararg types: KClass<T>): Int where T : Located {
@@ -212,7 +301,7 @@ class Board(private val scanner: Scanner, private val width: Int, private val he
                 Coordinate(located.x - 1, located.y),
                 Coordinate(located.x, located.y + 1),
                 Coordinate(located.x, located.y - 1)
-        ).filter { it.x >= 0 && it.y >= 0 && it.x < width && it.y < height }.apply { this.forEach { Log.debug(it.toString()) } }
+        ).filter { it.x >= 0 && it.y >= 0 && it.x < width && it.y < height }
     }
 
     private fun addElement(element: Located) {
