@@ -28,4 +28,7 @@ data class Score(
         }
     }
 
+    override fun toString(): String {
+        return "[$x;$y] isSafePath:$isSafePath isDeadEnd:$isDeadEnd isSuicide:$isSuicide"
+    }
 }

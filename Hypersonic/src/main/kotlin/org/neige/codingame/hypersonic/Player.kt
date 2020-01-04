@@ -8,9 +8,12 @@ data class Player(override val id: Int, override val x: Int, override val y: Int
 
         scores.forEach { Log.debug(it.toString()) }
 
+        val safestPlace = scores.sortedByDescending { it.timerToExplode ?: 10 }.firstOrNull { it.isSafePath && !it.isDeadEnd }
+                ?: scores.filter { !it.isSafePath && !it.isDeadEnd }.maxBy { it.timerToExplode ?: 10 }
+                ?: scores.maxBy { it.timerToExplode ?: 10 }!!
+
         return if (scores.none { it.destroyableBoxNumber > 0 }) {
-            val isSafe = scores.firstOrNull { it.isSafePath && !it.isDeadEnd }
-            Action(Action.Command.MOVE, isSafe ?: scores.filter { !it.isSafePath && !it.isDeadEnd }.maxBy { it.timerToExplode ?: 10 } ?: scores.maxBy { it.timerToExplode ?: 10 }!!, "I will kill you")
+            Action(Action.Command.MOVE, safestPlace, "I will kill you")
         } else {
             val bestScore = scores
                     .filter { it.isSafePath && !it.isSuicide && !it.isDeadEnd && board.getGridElement(it.located) !is Bomb }
@@ -52,7 +55,7 @@ data class Player(override val id: Int, override val x: Int, override val y: Int
             }
 
             val destroyableBoxNumber = board.destroyableBoxNumber(located, bombRange - 1)
-            val timerToExplode = board.timerToExplode(shortestPath.getOrNull(0) ?: located)
+            val timerToExplode = board.timerToExplode(located)
 
             val isDeadEnd = board.isDeadEnd(located)
             val isSuicide = board.isSuicide(located, Bomb(-1, located.x, located.y, 10, bombRange))
