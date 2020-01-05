@@ -2,38 +2,45 @@ package org.neige.codingame.ghostinthecell
 
 import java.util.*
 
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
+
 fun main(args: Array<String>) {
     val input = Scanner(System.`in`)
-    val factoryCount = input.nextInt() // the number of factories
-    val linkCount = input.nextInt() // the number of links between factories
+    val factoryCount = input.nextInt()
+    val linkCount = input.nextInt()
     for (i in 0 until linkCount) {
         val factory1 = input.nextInt()
         val factory2 = input.nextInt()
         val distance = input.nextInt()
     }
 
-    // game loop
     while (true) {
-        val entityCount = input.nextInt() // the number of entities (e.g. factories and troops)
+        val entityCount = input.nextInt()
+
+        val factories = mutableListOf<Factory>()
+        val troops = mutableListOf<Troop>()
+
         for (i in 0 until entityCount) {
             val entityId = input.nextInt()
             val entityType = input.next()
-            val arg1 = input.nextInt()
+
+            val diplomacy = when (input.nextInt()) {
+                1 -> Diplomacy.ALLY
+                0 -> Diplomacy.NEUTRAL
+                -1 -> Diplomacy.ENEMY
+                else -> Diplomacy.ENEMY
+            }
+
             val arg2 = input.nextInt()
             val arg3 = input.nextInt()
             val arg4 = input.nextInt()
             val arg5 = input.nextInt()
+
+            when (entityType) {
+                "FACTORY" -> factories.add(Factory(entityId, diplomacy, arg2, arg3))
+                "TROOP" -> troops.add(Troop(entityId, diplomacy, arg4))
+            }
         }
 
-        // Write an action using println()
-        // To debug: System.err.println("Debug messages...");
-
-
-        // Any valid action, such as "WAIT" or "MOVE source destination cyborgs"
         println("WAIT")
     }
 }
