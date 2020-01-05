@@ -41,6 +41,13 @@ fun main(args: Array<String>) {
             }
         }
 
-        println("WAIT")
+        factories.filter { it.diplomacy == Diplomacy.ALLY }?.maxBy { it.cyborgsNumber }?.let { factoryAlly ->
+            factories.firstOrNull { it.diplomacy == Diplomacy.NEUTRAL }?.let { factoryEnemy ->
+                println("MOVE ${factoryAlly.id} ${factoryEnemy.id} ${factoryAlly.cyborgsNumber / 2}")
+            } ?: factories.filter { it.diplomacy == Diplomacy.ENEMY }.minBy { it.cyborgsNumber }?.let { factoryEnemy ->
+                println("MOVE ${factoryAlly.id} ${factoryEnemy.id} ${factoryAlly.cyborgsNumber / 2}")
+            } ?: println("WAIT")
+        } ?: println("WAIT")
+
     }
 }
