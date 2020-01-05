@@ -5,4 +5,5 @@ interface Entity {
     val id: Int
 
     val diplomacy: Diplomacy
+
 }

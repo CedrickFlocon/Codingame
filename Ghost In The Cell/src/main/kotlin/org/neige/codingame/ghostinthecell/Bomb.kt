@@ -1,10 +1,9 @@
 package org.neige.codingame.ghostinthecell
 
-data class Troop(
+data class Bomb(
         override val id: Int,
         override val diplomacy: Diplomacy,
         val from: Factory,
-        val to: Factory,
-        val cyborgsNumber: Int,
-        val remainingDistance: Int
+        val to: Factory?,
+        val remainingDistance: Int?
 ) : Entity
