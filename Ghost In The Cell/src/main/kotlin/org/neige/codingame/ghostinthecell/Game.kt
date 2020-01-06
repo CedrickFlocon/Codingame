@@ -2,6 +2,18 @@ package org.neige.codingame.ghostinthecell
 
 import java.util.*
 
+/**
+ *
+ *  One game turn is computed as follows:
+ *
+ * Move existing troops and bombs
+ * Execute user orders
+ * Produce new cyborgs in all factories
+ * Solve battles
+ * Make the bombs explode
+ * Check end conditions
+ *
+ */
 class Game(private val input: Scanner, private val factories: Array<Factory>) {
 
     private var turnCount = 0
@@ -60,16 +72,17 @@ class Game(private val input: Scanner, private val factories: Array<Factory>) {
         }
 
         factories.filter { it.diplomacy == Diplomacy.ALLY }
+                .filter { it.cyborgsNumber > 0 }
                 .flatMap { it.links }
                 .filter { it.attractiveness > 0 }
                 .sortedByDescending { it.attractiveness }
-                .filter { it.from.cyborgsNumber > it.to.cyborgsNumber }
                 .filter { link ->
                     link.to.troops
                             .filter { it.diplomacy == Diplomacy.ALLY }
                             .filter { it.to == link.to }
                             .sumBy { it.cyborgsNumber } < link.to.cyborgsNumber + 1
                 }.forEach attack@{
+                    Log.debug("$it")
                     actions.add(it.from.attackFactory(it.to, it.to.cyborgsNumber + 1))
                 }
 

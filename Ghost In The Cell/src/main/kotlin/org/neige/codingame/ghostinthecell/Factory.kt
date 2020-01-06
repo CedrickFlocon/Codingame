@@ -35,9 +35,7 @@ data class Factory(override val id: Int) : Entity {
     }
 
     fun attackFactory(factory: Factory, cyborgsNumber: Int): Action {
-        if (diplomacy != Diplomacy.ALLY) {
-            throw java.lang.UnsupportedOperationException("Unable to attack with a non ally factory")
-        }
+        assertAlly()
 
         val troop = Troop(-1, Diplomacy.ALLY, this, factory, cyborgsNumber, links.first { it.to == factory }.distance)
         this.troops.add(troop)
@@ -48,9 +46,7 @@ data class Factory(override val id: Int) : Entity {
     }
 
     fun bombFactory(factory: Factory): Action {
-        if (diplomacy != Diplomacy.ALLY) {
-            throw java.lang.UnsupportedOperationException("Unable to bomb with a non ally factory")
-        }
+        assertAlly()
 
         val bomb = Bomb(-1, Diplomacy.ALLY, this, factory, links.first { it.to == factory }.distance)
         bombs.add(bomb)
@@ -59,8 +55,24 @@ data class Factory(override val id: Int) : Entity {
         return Bombing(this, factory)
     }
 
+    fun increase(): Action {
+        assertAlly()
+
+        if (cyborgsNumber < 10) {
+            throw UnsupportedOperationException("Not enough cyborgs")
+        }
+
+        return Increasing(this)
+    }
+
     override fun toString(): String {
-        return "id:$id diplomacy:$diplomacy cyborgsNumber:$cyborgsNumber"
+        return "Factory id:$id diplomacy:$diplomacy cyborgsNumber:$cyborgsNumber cyborgsProduction:$cyborgsProduction"
+    }
+
+    private fun assertAlly() {
+        if (diplomacy != Diplomacy.ALLY) {
+            throw UnsupportedOperationException("Unable to do action with a non ally factory")
+        }
     }
 
     private class Attacking(private val troop: Troop) : Action() {
@@ -83,6 +95,14 @@ data class Factory(override val id: Int) : Entity {
 
         override fun play(): String {
             return "BOMB ${from.id} ${to.id}"
+        }
+
+    }
+
+    private class Increasing(private val factory: Factory) : Action() {
+
+        override fun play(): String {
+            return "INC ${factory.id}"
         }
 
     }

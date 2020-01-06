@@ -14,4 +14,8 @@ data class Link(val from: Factory, val to: Factory, val distance: Int) {
         attractiveness = -distance - to.cyborgsNumber + diplomacy + to.cyborgsProduction * 2
     }
 
+    override fun toString(): String {
+        return "Link : from:${from.id} to:${to.id} distance:$distance attractiveness:$attractiveness"
+    }
+
 }
