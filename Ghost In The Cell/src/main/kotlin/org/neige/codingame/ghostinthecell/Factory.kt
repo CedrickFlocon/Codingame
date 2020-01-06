@@ -1,10 +1,12 @@
 package org.neige.codingame.ghostinthecell
 
+import kotlin.math.max
+
 data class Factory(override val id: Int) : Entity {
 
     companion object {
 
-        private var BOMB_COUNT = 2
+        var BOMB_COUNT = 2
 
         fun canLaunchBomb(): Boolean {
             return BOMB_COUNT > 0
@@ -19,30 +21,46 @@ data class Factory(override val id: Int) : Entity {
         private set
     var cyborgsProduction: Int = 0
         private set
-    var turnStopProduction: Int? = null
+    var turnProductionStop: Int? = null
 
     val troops = mutableListOf<Troop>()
     val bombs = mutableListOf<Bomb>()
 
-    fun newTurn(diplomacy: Diplomacy, cyborgsNumber: Int, cyborgsProduction: Int, turnStopProduction: Int?) {
+    var attractiveness: Double = 0.0
+        private set
+    var safeness: Double = 0.0
+        private set
+    var cyborgsProjection = 0.0
+        private set
+    var nearBomb = false
+        private set
+
+    fun newTurn(diplomacy: Diplomacy, cyborgsNumber: Int, cyborgsProduction: Int, turnProductionStop: Int?) {
         troops.clear()
         bombs.clear()
 
         this.diplomacy = diplomacy
         this.cyborgsNumber = cyborgsNumber
         this.cyborgsProduction = cyborgsProduction
-        this.turnStopProduction = turnStopProduction
+        this.turnProductionStop = turnProductionStop
     }
 
-    fun attackFactory(factory: Factory, cyborgsNumber: Int): Action {
+    fun buildCoefficient(nearBomb: Boolean) {
+        this.nearBomb = nearBomb
+        this.safeness = buildSafeness()
+        this.cyborgsProjection = buildProjection()
+        this.attractiveness = buildAttractiveness()
+    }
+
+    fun moveFactory(factory: Factory, cyborgsNumber: Int): Action {
         assertAlly()
 
         val troop = Troop(-1, Diplomacy.ALLY, this, factory, cyborgsNumber, links.first { it.to == factory }.distance)
         this.troops.add(troop)
         factory.troops.add(troop)
 
-        this.cyborgsNumber - cyborgsNumber
-        return Attacking(troop)
+        this.cyborgsNumber = max(this.cyborgsNumber - cyborgsNumber, 0)
+        return Moving(troop)
     }
 
     fun bombFactory(factory: Factory): Action {
@@ -66,7 +84,11 @@ data class Factory(override val id: Int) : Entity {
     }
 
     override fun toString(): String {
-        return "Factory id:$id diplomacy:$diplomacy cyborgsNumber:$cyborgsNumber cyborgsProduction:$cyborgsProduction"
+        return """
+            | Factory $id $diplomacy
+            | => cyborgsNumber:$cyborgsNumber cyborgsProduction:$cyborgsProduction
+            | => nearBomb:$nearBomb attractiveness:$attractiveness safeness:$safeness cyborgsProjection:$cyborgsProjection
+        """.trimMargin()
     }
 
     private fun assertAlly() {
@@ -75,7 +97,50 @@ data class Factory(override val id: Int) : Entity {
         }
     }
 
-    private class Attacking(private val troop: Troop) : Action() {
+    private fun buildSafeness(): Double {
+        val cyborgsAlly = links
+                .filter { it.to.diplomacy == Diplomacy.ALLY }
+                .sumByDouble { it.to.cyborgsNumber * 1.0 / it.distance }
+                .plus(if (diplomacy == Diplomacy.ALLY) cyborgsNumber else 0)
+
+        val troopsAlly = troops.filter { it.diplomacy == Diplomacy.ALLY }
+                .sumByDouble { troop -> troop.cyborgsNumber * 1.0 / troop.remainingDistance.plus(if (troop.to != this) troop.to.links.find { it.to == this }!!.distance else 0) }
+
+        val cyborgsEnemy = links
+                .filter { it.to.diplomacy == Diplomacy.ENEMY }
+                .sumByDouble { it.to.cyborgsNumber * 1.0 / it.distance }
+                .plus(if (diplomacy == Diplomacy.ENEMY) cyborgsNumber else 0)
+
+        val troopsEnemy = troops.filter { it.diplomacy == Diplomacy.ENEMY }
+                .sumByDouble { troop -> troop.cyborgsNumber * 1.0 / troop.remainingDistance.plus(if (troop.to != this) troop.to.links.find { it.to == this }!!.distance else 0) }
+
+        return cyborgsAlly.plus(troopsAlly)
+                .minus(cyborgsEnemy.plus(troopsEnemy))
+    }
+
+    private fun buildAttractiveness(): Double {
+        return cyborgsProduction.toDouble() + 1
+    }
+
+    private fun buildProjection(): Double {
+        return when (diplomacy) {
+            Diplomacy.ALLY -> +cyborgsNumber + if (turnProductionStop == null) cyborgsProduction else 0
+            Diplomacy.ENEMY -> -cyborgsNumber - if (turnProductionStop == null) cyborgsProduction else 0
+            else -> 0
+        }.plus(
+                troops
+                        .filter { it.diplomacy == Diplomacy.ALLY }
+                        .filter { it.to == this }
+                        .sumByDouble { troop -> troop.cyborgsNumber * 1.0 / troop.remainingDistance }
+        ).minus(
+                troops
+                        .filter { it.diplomacy == Diplomacy.ENEMY }
+                        .filter { it.to == this }
+                        .sumByDouble { troop -> troop.cyborgsNumber * 1.0 / troop.remainingDistance }
+        )
+    }
+
+    private class Moving(private val troop: Troop) : Action() {
 
         override fun play(): String {
             return "MOVE ${troop.from.id} ${troop.to.id} ${troop.cyborgsNumber}"

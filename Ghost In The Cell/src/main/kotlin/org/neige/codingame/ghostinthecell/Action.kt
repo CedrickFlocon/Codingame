@@ -1,6 +1,6 @@
 package org.neige.codingame.ghostinthecell
 
-abstract class Action() {
+abstract class Action {
     abstract fun play(): String
 }
 

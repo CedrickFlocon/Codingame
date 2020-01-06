@@ -7,4 +7,12 @@ data class Troop(
         val to: Factory,
         val cyborgsNumber: Int,
         val remainingDistance: Int
-) : Entity
+) : Entity {
+
+    override fun toString(): String {
+        return """ Troop $id $diplomacy
+            | => from:${from.id} to:${to.id}
+            | => cyborgsNumber:$cyborgsNumber remainingDistance:$remainingDistance
+        """.trimMargin()
+    }
+}
