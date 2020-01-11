@@ -100,7 +100,9 @@ class Game(private val input: Scanner, private val factories: Array<Factory>) {
 
         if (allyCyborgs / (allyCyborgs + enemyCyborgs).toFloat() > 0.45) {
             factories
+                    .asSequence()
                     .filter { it.diplomacy == Diplomacy.ALLY }
+                    .filter { !it.nearBomb }
                     .filter { it.cyborgsNumber >= 10 }
                     .filter { it.safeness > 0 }
                     .filter { it.cyborgsProjection > 10 }
@@ -114,17 +116,20 @@ class Game(private val input: Scanner, private val factories: Array<Factory>) {
 
         factories
                 .flatMap { it.links }
-                .sortedByDescending { it.to.attractiveness * 1 / it.distance }
+                .sortedByDescending { it.from.attractiveness * 1 / it.distance }
                 .asSequence()
                 .filter { it.to.diplomacy == Diplomacy.ALLY }
+                .filter { it.to.cyborgsNumber > 0 }
                 .filter { it.to.cyborgsProjection > 0 }
-                .filter { it.from.safeness < it.to.safeness }
-                .filter { it.from.diplomacy != Diplomacy.NEUTRAL || it.from.cyborgsNumber < it.to.cyborgsProjection }
+                .filter { it.from.diplomacy != Diplomacy.ALLY || (it.from.safeness < it.to.safeness && it.from.cyborgsNumber < 10 && it.from.cyborgsProduction < 3) }
+                .filter { it.from.diplomacy != Diplomacy.NEUTRAL || it.from.cyborgsNumber < it.to.cyborgsNumber }
                 .forEach {
-                    when {
-                        it.to.nearBomb -> actions.add(it.to.moveFactory(it.from, it.to.cyborgsNumber))
-                        else -> actions.add(it.to.moveFactory(it.from, min(it.to.cyborgsProjection.roundToInt(), it.from.cyborgsNumber + 1)))
+                    val cyborgsNumber = when {
+                        it.to.nearBomb -> it.to.cyborgsNumber
+                        else -> min(min(it.to.cyborgsProjection.roundToInt(), it.from.cyborgsNumber + 1), it.to.cyborgsNumber)
                     }
+
+                    actions.add(it.to.moveFactory(it.from, cyborgsNumber))
                 }
 
         return actions

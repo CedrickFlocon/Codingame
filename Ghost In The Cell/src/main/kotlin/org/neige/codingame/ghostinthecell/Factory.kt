@@ -80,6 +80,7 @@ data class Factory(override val id: Int) : Entity {
             throw UnsupportedOperationException("Not enough cyborgs")
         }
 
+        this.cyborgsNumber -= 10
         return Increasing(this)
     }
 
@@ -131,12 +132,12 @@ data class Factory(override val id: Int) : Entity {
                 troops
                         .filter { it.diplomacy == Diplomacy.ALLY }
                         .filter { it.to == this }
-                        .sumByDouble { troop -> troop.cyborgsNumber * 1.0 / troop.remainingDistance }
+                        .sumByDouble { it.cyborgsNumber * 1.0 / it.remainingDistance }
         ).minus(
                 troops
                         .filter { it.diplomacy == Diplomacy.ENEMY }
                         .filter { it.to == this }
-                        .sumByDouble { troop -> troop.cyborgsNumber * 1.0 / troop.remainingDistance }
+                        .sumByDouble { it.cyborgsNumber * 1.0 / it.remainingDistance }
         )
     }
 
