@@ -14,6 +14,7 @@ data class Factory(override val id: Int) : Entity {
     }
 
     val links = mutableListOf<Link>()
+    var distanceToCenter = 0
 
     override var diplomacy: Diplomacy = Diplomacy.NEUTRAL
         private set
@@ -86,9 +87,9 @@ data class Factory(override val id: Int) : Entity {
 
     override fun toString(): String {
         return """
-            | Factory $id $diplomacy
+            | Factory $id $diplomacy distanceToCenter:$distanceToCenter
             | => cyborgsNumber:$cyborgsNumber cyborgsProduction:$cyborgsProduction
-            | => nearBomb:$nearBomb attractiveness:$attractiveness safeness:$safeness cyborgsProjection:$cyborgsProjection
+            | => nearBomb:$nearBomb attractiveness:${attractiveness.toInt()} safeness:${safeness.toInt()} cyborgsProjection:$cyborgsProjection
         """.trimMargin()
     }
 
@@ -120,7 +121,7 @@ data class Factory(override val id: Int) : Entity {
     }
 
     private fun buildAttractiveness(): Double {
-        return cyborgsProduction.toDouble() + 1
+        return cyborgsProduction.toDouble() - cyborgsNumber.toDouble() / 10
     }
 
     private fun buildProjection(): Double {
@@ -132,12 +133,12 @@ data class Factory(override val id: Int) : Entity {
                 troops
                         .filter { it.diplomacy == Diplomacy.ALLY }
                         .filter { it.to == this }
-                        .sumByDouble { it.cyborgsNumber * 1.0 / it.remainingDistance }
+                        .sumByDouble { it.cyborgsNumber.toDouble() }
         ).minus(
                 troops
                         .filter { it.diplomacy == Diplomacy.ENEMY }
                         .filter { it.to == this }
-                        .sumByDouble { it.cyborgsNumber * 1.0 / it.remainingDistance }
+                        .sumByDouble { it.cyborgsNumber.toDouble() }
         )
     }
 

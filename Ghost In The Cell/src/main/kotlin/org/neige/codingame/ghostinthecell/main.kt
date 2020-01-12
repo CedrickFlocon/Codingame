@@ -19,6 +19,10 @@ fun main() {
         if (distance > distanceMax) {
             distanceMax = distance
         }
+
+        if (factory1.id == 0) {
+            factory2.distanceToCenter = distance
+        }
     }
 
     Link.DISTANCE_MAX = distanceMax

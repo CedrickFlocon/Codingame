@@ -1,7 +1,7 @@
 package org.neige.codingame.ghostinthecell
 
 import java.util.*
-import kotlin.math.min
+import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
 /**
@@ -68,7 +68,6 @@ class Game(private val input: Scanner, private val factories: Array<Factory>) {
         Log.debug(this.toString())
 
         val warningFactories = factories
-                .filter { it.diplomacy == Diplomacy.ENEMY }
                 .flatMap { factory -> factory.bombs.filter { it.diplomacy == Diplomacy.ENEMY } }
                 .flatMap { bomb -> bomb.from.links.filter { it.distance == bomb.distanceTraveled && it.to.diplomacy == Diplomacy.ALLY } }
                 .map { it.to }
@@ -85,7 +84,7 @@ class Game(private val input: Scanner, private val factories: Array<Factory>) {
         if ((turnCount == 0 || turnCount >= 5) && Factory.canLaunchBomb()) {
             factories
                     .filter { it.diplomacy == Diplomacy.ENEMY }
-                    .filter { it.cyborgsProjection < 0 }
+                    .filter { it.safeness < 0 && it.cyborgsProduction > 0 }
                     .filter { factory -> factory.bombs.none { it.to == factory && it.diplomacy == Diplomacy.ALLY } }
                     .sortedByDescending { it.cyborgsProduction }
                     .take(Factory.BOMB_COUNT)
@@ -98,7 +97,7 @@ class Game(private val input: Scanner, private val factories: Array<Factory>) {
                     }
         }
 
-        if (allyCyborgs / (allyCyborgs + enemyCyborgs).toFloat() > 0.45) {
+        if (allyCyborgs / (allyCyborgs + enemyCyborgs).toFloat() > 0.40 && factories.none { it.diplomacy == Diplomacy.NEUTRAL && it.cyborgsProduction > 0 && it.cyborgsNumber <= 10 }) {
             factories
                     .asSequence()
                     .filter { it.diplomacy == Diplomacy.ALLY }
@@ -115,21 +114,24 @@ class Game(private val input: Scanner, private val factories: Array<Factory>) {
         }
 
         factories
+                .filter { it.diplomacy == Diplomacy.ALLY }
                 .flatMap { it.links }
-                .sortedByDescending { it.from.attractiveness * 1 / it.distance }
+                .sortedByDescending { it.to.attractiveness * 1 / it.distance + it.to.safeness / 10 }
                 .asSequence()
-                .filter { it.to.diplomacy == Diplomacy.ALLY }
-                .filter { it.to.cyborgsNumber > 0 }
-                .filter { it.to.cyborgsProjection > 0 }
-                .filter { it.from.diplomacy != Diplomacy.ALLY || (it.from.safeness < it.to.safeness && it.from.cyborgsNumber < 10 && it.from.cyborgsProduction < 3) }
-                .filter { it.from.diplomacy != Diplomacy.NEUTRAL || it.from.cyborgsNumber < it.to.cyborgsNumber }
+                .filter { it.from.cyborgsNumber > 0 && it.from.cyborgsProjection > 0 }
+                .filter { it.to.diplomacy != Diplomacy.ALLY || (it.to.cyborgsProduction < 3)
+                .filter { it.to.diplomacy != Diplomacy.NEUTRAL || (it.from.cyborgsNumber > it.to.cyborgsNumber && it.to.cyborgsNumber >= it.to.cyborgsProjection) }
+                .filter { it.to.diplomacy != Diplomacy.ENEMY || (it.to.cyborgsNumber < it.from.cyborgsNumber && it.to.cyborgsProjection <= it.to.cyborgsNumber) }
+                .toList()
                 .forEach {
                     val cyborgsNumber = when {
-                        it.to.nearBomb -> it.to.cyborgsNumber
-                        else -> min(min(it.to.cyborgsProjection.roundToInt(), it.from.cyborgsNumber + 1), it.to.cyborgsNumber)
+                        it.from.nearBomb -> it.to.cyborgsNumber
+                        it.to.diplomacy == Diplomacy.ALLY -> it.to.cyborgsProjection.roundToInt().absoluteValue
+                        it.to.diplomacy == Diplomacy.NEUTRAL -> it.to.cyborgsNumber - it.to.cyborgsProjection.roundToInt() + 1
+                        it.to.diplomacy == Diplomacy.ENEMY -> if (it.from.safeness > 0) it.from.cyborgsNumber else it.distance * it.to.cyborgsProduction + it.to.cyborgsNumber
+                        else -> 0
                     }
-
-                    actions.add(it.to.moveFactory(it.from, cyborgsNumber))
+                    actions.add(it.from.moveFactory(it.to, cyborgsNumber))
                 }
 
         return actions
