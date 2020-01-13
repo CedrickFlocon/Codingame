@@ -1,6 +1,10 @@
 rootProject.name = 'Codingame'
+include 'Puzzle'
+
 include 'Coders Strike Back'
 findProject(':Coders Strike Back')?.name = 'CodersStrikeBack'
-include 'Puzzle'
+
 include 'Hypersonic'
 
+include 'Ghost In The Cell'
+findProject(':Ghost In The Cell')?.name = "GhostInTheCell"

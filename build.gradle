@@ -1,15 +1,5 @@
-apply from: "gradle/codingame.gradle"
-
-buildscript {
-    ext.junit = '1.0.1'
-    ext.spec = '1.1.5'
-    ext.mockito = '2.10.0'
-    ext.assertj = '3.8.0'
-
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath "org.junit.platform:junit-platform-gradle-plugin:$junit"
-    }
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.3.61'
 }
+
+apply from: "gradle/codingame.gradle"
