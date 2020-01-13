@@ -1,23 +1,4 @@
-buildscript {
-    ext.kotlin_version = '1.3.61'
-    ext.junit = '1.0.1'
-    ext.spec = '1.1.5'
-    ext.mockito = '2.10.0'
-    ext.assertj = '3.8.0'
-
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.junit.platform:junit-platform-gradle-plugin:$junit"
-    }
-}
-
 apply plugin: 'kotlin'
-apply plugin: 'org.junit.platform.gradle.plugin'
-
-sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
@@ -26,26 +7,16 @@ repositories {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib"
 
-    testRuntime "org.junit.platform:junit-platform-launcher:$junit"
-    testCompile "org.jetbrains.spek:spek-api:$spec"
-    testRuntime "org.jetbrains.spek:spek-junit-platform-engine:$spec"
-    testRuntime "org.assertj:assertj-core:$assertj"
-    testCompile "org.mockito:mockito-core:$mockito"
+    testRuntime "org.spekframework.spek2:spek-runner-junit5:2.0.9"
+    testCompile "org.spekframework.spek2:spek-dsl-jvm:2.0.9"
+    testCompile "org.assertj:assertj-core:3.14.0"
+    testCompile "org.mockito:mockito-core:3.2.4"
 }
 
-compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-}
-
-junitPlatform {
-    filters {
-        engines {
-            include 'spek'
-        }
+test {
+    useJUnitPlatform {
+        includeEngines 'spek2'
     }
 }

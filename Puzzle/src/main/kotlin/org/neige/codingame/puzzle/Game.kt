@@ -2,13 +2,12 @@ package org.neige.codingame.puzzle
 
 import java.util.*
 
-class Game(private val input: Scanner) {
+class Game(input: Scanner) {
 
-    var answer: String = ""
+    private var answer: String
 
-    fun nextStep() {
+    init {
         answer = input.nextLine()
-        System.err.println(answer)
     }
 
     fun answer(): String {
