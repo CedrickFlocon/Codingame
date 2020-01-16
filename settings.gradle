@@ -1,4 +1,5 @@
 rootProject.name = 'Codingame'
+
 include 'Puzzle'
 
 include 'Coders Strike Back'

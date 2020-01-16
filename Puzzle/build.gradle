@@ -1,8 +1,9 @@
-apply plugin: 'kotlin'
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+}
 
 repositories {
     mavenCentral()
-    jcenter()
     maven { url "http://dl.bintray.com/jetbrains/spek" }
 }
 

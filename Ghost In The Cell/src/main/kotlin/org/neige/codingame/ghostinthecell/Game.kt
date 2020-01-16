@@ -119,7 +119,7 @@ class Game(private val input: Scanner, private val factories: Array<Factory>) {
                 .sortedByDescending { it.to.attractiveness * 1 / it.distance + it.to.safeness / 10 }
                 .asSequence()
                 .filter { it.from.cyborgsNumber > 0 && it.from.cyborgsProjection > 0 }
-                .filter { it.to.diplomacy != Diplomacy.ALLY || (it.to.cyborgsProduction < 3)
+                .filter { it.to.diplomacy != Diplomacy.ALLY || (it.to.cyborgsProduction < 3) }
                 .filter { it.to.diplomacy != Diplomacy.NEUTRAL || (it.from.cyborgsNumber > it.to.cyborgsNumber && it.to.cyborgsNumber >= it.to.cyborgsProjection) }
                 .filter { it.to.diplomacy != Diplomacy.ENEMY || (it.to.cyborgsNumber < it.from.cyborgsNumber && it.to.cyborgsProjection <= it.to.cyborgsNumber) }
                 .toList()

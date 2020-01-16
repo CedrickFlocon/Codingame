@@ -2,7 +2,14 @@
 [Codingame](http://codingame.com/) solution
 
 # Build single file
-`./gradlew :module:buildSingleFile`
+`./gradlew :module:codingame`
+
+Internal module dependency `build.gradle`
+```
+codingame {
+    dependencies = [project(':foo'), project(':bar')]
+}
+```
 
 # License
     Copyright © 2015 Cédrick Flocon
