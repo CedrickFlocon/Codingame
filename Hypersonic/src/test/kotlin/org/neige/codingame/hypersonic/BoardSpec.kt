@@ -295,7 +295,7 @@ object BoardSpec : Spek({
             val accessiblePath = board.getAccessiblePath(Player(0, 5, 5, 0, 0))
 
             it("should have only accessible path") {
-                assertThat(accessiblePath).hasSize(5)
+                assertThat(accessiblePath).hasSize(6)
                 assertThat(accessiblePath).contains(Floor(5, 4))
                 assertThat(accessiblePath).contains(Floor(6, 4))
                 assertThat(accessiblePath).contains(Floor(6, 3))
