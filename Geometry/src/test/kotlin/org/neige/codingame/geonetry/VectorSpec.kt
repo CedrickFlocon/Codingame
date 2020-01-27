@@ -1,6 +1,7 @@
-package org.neige.codingame
+package org.neige.codingame.geonetry
 
 import org.assertj.core.api.Assertions.assertThat
+import org.neige.codingame.geometry.Vector
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 

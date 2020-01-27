@@ -7,14 +7,7 @@ repositories {
     maven { url "http://dl.bintray.com/jetbrains/spek" }
 }
 
-codingame {
-    dependencies = [project(':Geometry'), project(':Util')]
-}
-
 dependencies {
-    implementation(project(':Geometry'))
-    implementation(project(':Util'))
-
     compile "org.jetbrains.kotlin:kotlin-stdlib"
 
     testRuntime "org.spekframework.spek2:spek-runner-junit5:2.0.9"

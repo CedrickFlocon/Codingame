@@ -1,6 +1,6 @@
 package org.neige.codingame.puzzle
 
-import java.util.*
+import java.util.Scanner
 
 fun main() {
     val game = Game(Scanner(System.`in`))

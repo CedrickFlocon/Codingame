@@ -1,4 +1,4 @@
-package org.neige.codingame
+package org.neige.codingame.geometry
 
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -9,12 +9,12 @@ data class Vector(val x: Double, val y: Double) {
         return Vector(-x, -y)
     }
 
-    operator fun plus(scalar: Vector): Vector {
-        return Vector(x + scalar.x, y + scalar.y)
+    operator fun plus(vector: Vector): Vector {
+        return Vector(x + vector.x, y + vector.y)
     }
 
-    operator fun minus(scalar: Vector): Vector {
-        return Vector(x - scalar.x, y - scalar.y)
+    operator fun minus(vector: Vector): Vector {
+        return Vector(x - vector.x, y - vector.y)
     }
 
     operator fun times(factor: Double): Vector {
