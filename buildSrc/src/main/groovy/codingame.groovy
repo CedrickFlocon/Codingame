@@ -1,13 +1,9 @@
 import groovy.io.FileType
-import org.apache.tools.ant.Project
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.Input
+import org.gradle.api.internal.artifacts.dependencies.DefaultProjectDependency
 import org.gradle.api.tasks.TaskAction
 
 class Codingame extends DefaultTask {
-
-    @Input
-    List<Project> dependencies = []
 
     @TaskAction
     def buildSingleFile() {
@@ -26,7 +22,9 @@ class Codingame extends DefaultTask {
         def importLine = new ArrayList()
         def codeLine = new ArrayList()
 
-        (dependencies + project).each {
+        def internalProjects = project.configurations.find { it.name == "-runtime" }.dependencies.findAll { it instanceof DefaultProjectDependency }.stream().map { it.dependencyProject }.collect()
+
+        [project, *internalProjects].each {
             println(it)
             def sourceSetFile = it.sourceSets.main.kotlin.srcDirs[0]
 

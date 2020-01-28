@@ -7,10 +7,6 @@ repositories {
     maven { url "http://dl.bintray.com/jetbrains/spek" }
 }
 
-codingame {
-    dependencies = [project(':Geometry'), project(':Util')]
-}
-
 dependencies {
     implementation(project(':Geometry'))
     implementation(project(':Util'))

@@ -1,6 +1,7 @@
 package org.neige.codingame.ghostinthecell
 
-import java.util.*
+import org.neige.codingame.util.Log
+import java.util.Scanner
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 

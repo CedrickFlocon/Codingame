@@ -1,5 +1,7 @@
 package org.neige.codingame.hypersonic
 
+import org.neige.codingame.util.Log
+
 
 data class Player(override val id: Int, override val x: Int, override val y: Int, val bombNumber: Int, val bombRange: Int) : Owner, Located {
 
