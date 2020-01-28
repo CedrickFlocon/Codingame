@@ -5,10 +5,6 @@ include 'Util'
 
 include 'Puzzle'
 
-include 'Coders Strike Back'
-findProject(':Coders Strike Back')?.name = 'CodersStrikeBack'
-
+include 'CodersStrikeBack'
 include 'Hypersonic'
-
-include 'Ghost In The Cell'
-findProject(':Ghost In The Cell')?.name = "GhostInTheCell"
+include 'GhostInTheCell'
