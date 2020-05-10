@@ -3,18 +3,23 @@ package org.neige.codingame.geometry
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-data class Coordinate(val x: Double, val y: Double) {
+data class Coordinate(val x: Int, val y: Int) {
 
     operator fun plus(vector: Vector): Coordinate {
         return Coordinate(x + vector.x, y + vector.y)
     }
 
     fun distanceFrom(coordinate: Coordinate): Double {
-        return sqrt((coordinate.y - y).pow(2.0) + (coordinate.x - x).pow(2.0))
+        return sqrt((coordinate.y - y).toDouble().pow(2.0) + (coordinate.x - x).toDouble().pow(2.0))
     }
 
+    override fun toString() = "[${this.x}, ${this.y}]"
 }
 
 operator fun <T> Array<Array<T>>.get(coordinate: Coordinate): T {
-    return this[coordinate.x.toInt()][coordinate.y.toInt()]
+    return this[coordinate.x][coordinate.y]
+}
+
+operator fun <T> Array<Array<T>>.set(coordinate: Coordinate, value: T) {
+    this[coordinate.x][coordinate.y] = value
 }

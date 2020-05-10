@@ -1,13 +1,23 @@
 package org.neige.codingame.pacman
 
-class Game(private val pacs: Array<Pac>, private val pellets: Array<Pellet>) {
+/**
+ * Prioritise super pellet
+ * Build path to
+ * Avoid ally collision (and block)
+ * Avoid pac follow (neighbor and same direction)
+ */
+class Game(private val board: Board) {
 
-    fun play() {
-        val moves = pacs
-                .filter { it.team == Pac.Team.ALLY }
-                .map { pac -> pac.move(pellets.minBy { it.coordinate.distanceFrom(pac.coordinate) }!!.coordinate) }
+    fun nextTurn(pacs: Array<Pac>, pellets: Array<Pellet>, score: Map<Pac.Team, Int>) {
+        board.updateInfo(pacs, pellets)
 
-        println(moves.joinToString("| "))
+        board.debug()
+
+        println(
+                pacs.filter { it.team == Pac.Team.ALLY }
+                        .mapNotNull { it.action(board) }
+                        .joinToString("| ")
+        )
     }
 
 }

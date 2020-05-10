@@ -2,6 +2,8 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
 }
 
+sourceCompatibility = 1.8
+
 repositories {
     mavenCentral()
     maven { url "http://dl.bintray.com/jetbrains/spek" }
