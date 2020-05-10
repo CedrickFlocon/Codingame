@@ -17,20 +17,16 @@ fun main(args: Array<String>) {
     while (true) {
         val myScore = input.nextInt()
         val opponentScore = input.nextInt()
-        var pac: Pac? = null
-        val visiblePacCount = input.nextInt()
-        for (i in 0 until visiblePacCount) {
+        val pacs = Array(input.nextInt()) {
             val pacId = input.nextInt()
-            val mine = input.nextInt() != 0
+            val team = if (input.nextInt() != 0) Pac.Team.ALLY else Pac.Team.ENEMY
             val x = input.nextInt()
             val y = input.nextInt()
             val typeId = input.next()
             val speedTurnsLeft = input.nextInt()
             val abilityCooldown = input.nextInt()
 
-            if (mine) {
-                pac = Pac(Coordinate(x, y))
-            }
+            Pac(pacId, team, Coordinate(x, y))
         }
 
         val pellets = Array(input.nextInt()) {
@@ -41,6 +37,6 @@ fun main(args: Array<String>) {
             Pellet(value, Coordinate(x, y))
         }
 
-        Game(pac!!, pellets).play()
+        Game(pacs, pellets).play()
     }
 }
