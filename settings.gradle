@@ -5,6 +5,7 @@ include 'Util'
 
 include 'Puzzle'
 
+include 'PacMan'
 include 'CodersStrikeBack'
 include 'Hypersonic'
 include 'GhostInTheCell'
