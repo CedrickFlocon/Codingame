@@ -1,5 +1,7 @@
 package org.neige.codingame.pacman
 
+import org.neige.codingame.geometry.Coordinate
+
 interface Cell {
     val coordinate: Coordinate
 }

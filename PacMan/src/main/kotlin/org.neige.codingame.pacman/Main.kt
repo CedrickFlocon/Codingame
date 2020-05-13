@@ -55,7 +55,7 @@ fun main() {
             val y = input.nextInt()
             val value = input.nextInt()
 
-            Pellet(value, Coordinate(x, y))
+            Pellet(value, Coordinate(x, y), 0)
         }
 
         game.nextTurn(pacs, pellets, score)

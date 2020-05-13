@@ -6,50 +6,45 @@ import org.neige.codingame.geometry.get
 import org.neige.codingame.geometry.set
 import org.neige.codingame.util.Log
 
-
 class Board(private val grid: Array<Array<Cell>>) {
 
     private val pacs = mutableListOf<Pac>()
-    private val pacsAlly get() = pacs.filter { it.team == Pac.Team.ALLY }
 
     private val pellets = Array(grid.size) { x ->
         Array(grid[0].size) { y ->
             if (grid[x][y] is Floor) {
-                Pellet(1, Coordinate(x, y))
+                Pellet(1, Coordinate(x, y), 0)
             } else {
                 null
             }
         }
     }
 
-    fun paths(): List<Coordinate> {
-        return emptyList()
-    }
-
-    fun updateInfo(pacs: Array<Pac>, pellets: Array<Pellet>) {
+    fun updateInfo(knowPacs: Array<Pac>, knowPellets: Array<Pellet>) {
+        //Refresh know value
         this.pacs.clear()
-        this.pacs.addAll(pacs)
+        this.pacs.addAll(knowPacs)
 
-        pellets.forEach {
-            this.pellets[it.coordinate] = it
-        }
+        this.pellets.flatten().forEach { it?.let { it.lastTurnSeen++ } }
+        knowPellets.forEach { this.pellets[it.coordinate] = it }
 
+        //clear super pellets
         this.pellets
                 .flatten()
                 .filterNotNull()
                 .filter { it.value == Pellet.SUPER_PELLETS }
-                .filter { pellet -> pellets.none { it == pellet } }
+                .filter { pellet -> knowPellets.none { it.coordinate == pellet.coordinate } }
                 .forEach {
                     this.pellets[it.coordinate] = null
                 }
 
-        pacsAlly.forEach { pac ->
+        //clear pellets
+        this.pacs.filter { it.team == Pac.Team.ALLY }.forEach { pac ->
             this.pellets[pac.coordinate] = null
-
             (straightLine(pac.coordinate, Direction.UP) + straightLine(pac.coordinate, Direction.DOWN) +
                     straightLine(pac.coordinate, Direction.LEFT) + straightLine(pac.coordinate, Direction.RIGHT))
                     .forEach { coordinate ->
-                        if (pellets.none { pellet -> pellet.coordinate == coordinate }) {
+                        if (knowPellets.none { pellet -> pellet.coordinate == coordinate }) {
                             this.pellets[coordinate] = null
                         }
                     }
@@ -73,9 +68,11 @@ class Board(private val grid: Array<Array<Cell>>) {
                 .minBy { it.coordinate.distanceFrom(coordinate) }!!
     }
 
-    fun straightLinePellet(coordinate: Coordinate, direction: Direction): List<Pellet> {
+    fun straightLineElement(coordinate: Coordinate, direction: Direction): List<Element> {
         return straightLine(coordinate, direction)
-                .mapNotNull { pellets[it] }
+                .flatMap { straightLineCoordinate ->
+                    listOfNotNull(pacs.firstOrNull { it.coordinate == straightLineCoordinate }, pellets[straightLineCoordinate])
+                }
     }
 
     private fun straightLine(coordinate: Coordinate, direction: Direction): List<Coordinate> {
@@ -84,6 +81,9 @@ class Board(private val grid: Array<Array<Cell>>) {
         var newCoordinate = move(coordinate, direction)
 
         while (grid[newCoordinate] is Floor) {
+            if (newCoordinate == coordinate) {
+                break
+            }
             straightLineCoordinate.add(newCoordinate)
 
             newCoordinate = move(newCoordinate, direction)
@@ -91,17 +91,14 @@ class Board(private val grid: Array<Array<Cell>>) {
         return straightLineCoordinate
     }
 
-    private fun move(newCoordinate: Coordinate, direction: Direction): Coordinate {
-        var newCoordinate1 = newCoordinate
-        newCoordinate1 =
-                if (newCoordinate1.x == 0 && direction == Direction.LEFT) {
-                    Coordinate(grid.size - 1, newCoordinate1.y)
-                } else if (newCoordinate1.x == grid.size - 1 && direction == Direction.RIGHT) {
-                    Coordinate(0, newCoordinate1.y)
-                } else {
-                    newCoordinate1 + direction.vector
-                }
-        return newCoordinate1
+    private fun move(coordinate: Coordinate, direction: Direction): Coordinate {
+        return if (coordinate.x == 0 && direction == Direction.LEFT) {
+            Coordinate(grid.size - 1, coordinate.y)
+        } else if (coordinate.x == grid.size - 1 && direction == Direction.RIGHT) {
+            Coordinate(0, coordinate.y)
+        } else {
+            coordinate + direction.vector
+        }
     }
 
     fun debug() {
