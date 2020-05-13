@@ -42,13 +42,18 @@ fun main() {
                 "ROCK" -> Pac.Type.ROCK
                 "SCISSORS" -> Pac.Type.SCISSORS
                 "PAPER" -> Pac.Type.PAPER
+                "DEAD" -> null
                 else -> throw IllegalArgumentException()
             }
             val speedTurnsLeft = input.nextInt()
             val abilityCooldown = input.nextInt()
 
-            Pac(pacId, team, type, speedTurnsLeft, abilityCooldown, Coordinate(x, y))
-        }
+            if (type == null) {
+                null
+            } else {
+                return@Array Pac(pacId, team, type, speedTurnsLeft, abilityCooldown, Coordinate(x, y))
+            }
+        }.filterNotNull()
 
         val pellets = Array(input.nextInt()) {
             val x = input.nextInt()
@@ -56,7 +61,7 @@ fun main() {
             val value = input.nextInt()
 
             Pellet(value, Coordinate(x, y), 0)
-        }
+        }.toList()
 
         game.nextTurn(pacs, pellets, score)
     }

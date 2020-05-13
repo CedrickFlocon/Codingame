@@ -20,7 +20,7 @@ class Board(private val grid: Array<Array<Cell>>) {
         }
     }
 
-    fun updateInfo(knowPacs: Array<Pac>, knowPellets: Array<Pellet>) {
+    fun updateInfo(knowPacs: List<Pac>, knowPellets: List<Pellet>) {
         //Refresh know value
         this.pacs.clear()
         this.pacs.addAll(knowPacs)
