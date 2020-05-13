@@ -13,7 +13,7 @@ data class Coordinate(val x: Int, val y: Int) {
         return sqrt((coordinate.y - y).toDouble().pow(2.0) + (coordinate.x - x).toDouble().pow(2.0))
     }
 
-    override fun toString() = "[${this.x}, ${this.y}]"
+    override fun toString() = "[${this.x},${this.y}]"
 }
 
 operator fun <T> Array<Array<T>>.get(coordinate: Coordinate): T {

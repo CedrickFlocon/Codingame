@@ -2,22 +2,25 @@ package org.neige.codingame.pacman
 
 import org.neige.codingame.geometry.Coordinate
 
-sealed class Command(protected val pacId: Int, protected val message: String? = null)
+sealed class Command(val pac: Pac, protected val message: String? = null)
 
-class Move(pacId: Int, private val coordinate: Coordinate, message: String? = null) : Command(pacId, message) {
+class Move(pac: Pac, val path: List<Coordinate>, message: String? = null) : Command(pac, message) {
 
-    override fun toString() = "MOVE $pacId ${coordinate.x} ${coordinate.y} ${message ?: ""}"
+    val destination
+        get() = if (path.size >= 2) path[1] else path.first()
 
-}
-
-class Speed(pacId: Int, message: String? = null) : Command(pacId, message) {
-
-    override fun toString() = "SPEED $pacId ${message ?: ""}"
+    override fun toString() = "MOVE ${pac.id} ${destination.x} ${destination.y} ${message ?: ""}"
 
 }
 
-class Switch(pacId: Int, private val type: Pac.Type, message: String? = null) : Command(pacId, message) {
+class Speed(pac: Pac, message: String? = null) : Command(pac, message) {
 
-    override fun toString() = "SWITCH $pacId ${type.name} ${message ?: ""}"
+    override fun toString() = "SPEED ${pac.id} ${message ?: ""}"
+
+}
+
+class Switch(pac: Pac, private val type: Pac.Type, message: String? = null) : Command(pac, message) {
+
+    override fun toString() = "SWITCH ${pac.id} ${type.name} ${message ?: ""}"
 
 }

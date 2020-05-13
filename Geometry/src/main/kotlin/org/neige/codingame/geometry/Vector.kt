@@ -25,4 +25,5 @@ data class Vector(val x: Int, val y: Int) {
         return sqrt(x.toDouble().pow(2.0) + y.toDouble().pow(2.0))
     }
 
+    override fun toString() = "[${this.x},${this.y}]"
 }
