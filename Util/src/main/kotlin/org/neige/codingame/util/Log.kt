@@ -2,16 +2,16 @@ package org.neige.codingame.util
 
 object Log {
 
-    private const val LOGGABLE = true
+    var loggable = true
 
     fun debug(message: Any?) {
-        if (LOGGABLE) {
+        checkLoggable {
             System.err.println(message)
         }
     }
 
     fun <T> debug(board: Array<Array<T>>, stringify: (T) -> String) {
-        if (LOGGABLE) {
+        checkLoggable {
             (board[0].indices).forEach { y ->
                 var line = ""
                 board.indices.forEach { x ->
@@ -19,6 +19,12 @@ object Log {
                 }
                 debug(line)
             }
+        }
+    }
+
+    private fun checkLoggable(body: () -> Unit) {
+        if (loggable) {
+            body.invoke()
         }
     }
 
