@@ -4,14 +4,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
-import java.io.FileInputStream
 import java.io.PrintStream
 
 
 object LogSpec : Spek({
 
     lateinit var err: ByteArrayOutputStream
-    var originalErr = System.err
+    val originalErr = System.err
 
     beforeEachTest {
         err = ByteArrayOutputStream()
@@ -35,23 +34,12 @@ object LogSpec : Spek({
             }
         }
 
-        describe("log 11") {
-            beforeEachTest {
-                log.debug(11)
-            }
+        describe("Log array of array") {
+            val board = Array(2) { x -> Array(2) { y -> "[$x, $y]" } }
+            beforeEachTest { log.debug(board) { it } }
 
-            it("should log int") {
-                assertThat("11\n").isEqualTo(err.toString())
-            }
-        }
-
-        describe("log c") {
-            beforeEachTest {
-                log.debug('c')
-            }
-
-            it("should log char") {
-                assertThat("c\n").isEqualTo(err.toString())
+            it("should print the board") {
+                assertThat("[0, 0][1, 0]\n[0, 1][1, 1]\n").isEqualTo(err.toString())
             }
         }
     }

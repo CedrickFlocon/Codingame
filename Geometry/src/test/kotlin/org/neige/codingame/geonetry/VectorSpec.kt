@@ -8,29 +8,29 @@ import org.spekframework.spek2.style.specification.describe
 object VectorSpec : Spek({
 
     describe("a vector") {
-        val vector by memoized { Vector(5.0, 5.0) }
+        val vector by memoized { Vector(5, 5) }
 
         it("should have an inverse vector") {
-            assertThat(-vector).isEqualTo(Vector(-5.0, -5.0))
+            assertThat(-vector).isEqualTo(Vector(-5, -5))
         }
 
         it("times") {
-            assertThat(vector * 2.0).isEqualTo(Vector(10.0, 10.0))
+            assertThat(vector * 2).isEqualTo(Vector(10, 10))
         }
 
         it("magnitude") {
-            assertThat(vector.magnitude()).isEqualTo(7.0710678118654755)
+            assertThat("%.2f".format(vector.magnitude()).toDouble()).isEqualTo(7.07)
         }
 
         describe("a second vector") {
-            val secondVector by memoized { Vector(2.0, -2.0) }
+            val secondVector by memoized { Vector(2, -2) }
 
             it("plus") {
-                assertThat(vector + secondVector).isEqualTo(Vector(7.0, 3.0))
+                assertThat(vector + secondVector).isEqualTo(Vector(7, 3))
             }
 
             it("minus") {
-                assertThat(vector - secondVector).isEqualTo(Vector(3.0, 7.0))
+                assertThat(vector - secondVector).isEqualTo(Vector(3, 7))
             }
         }
     }
