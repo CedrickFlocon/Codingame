@@ -24,24 +24,38 @@ object LogSpec : Spek({
     describe("a log object") {
         val log by memoized { Log }
 
-        describe("log Hello") {
+        describe("not loggable") {
             beforeEachTest {
+                log.loggable = false
                 log.debug("Hello")
             }
 
-            it("should log string") {
-                assertThat("Hello\n").isEqualTo(err.toString())
+            it("shouldn't log string") {
+                assertThat(err.toString()).isEmpty()
             }
         }
 
-        describe("Log array of array") {
-            val board = Array(2) { x -> Array(2) { y -> "[$x, $y]" } }
-            beforeEachTest { log.debug(board) { it } }
+        describe("not loggable") {
+            beforeEachTest { log.loggable = true }
 
-            it("should print the board") {
-                assertThat("[0, 0][1, 0]\n[0, 1][1, 1]\n").isEqualTo(err.toString())
+            describe("log Hello") {
+                beforeEachTest {
+                    log.debug("Hello")
+                }
+
+                it("should log string") {
+                    assertThat("Hello\n").isEqualTo(err.toString())
+                }
+            }
+
+            describe("Log array of array") {
+                val board = Array(2) { x -> Array(2) { y -> "[$x, $y]" } }
+                beforeEachTest { log.debug(board) { it } }
+
+                it("should print the board") {
+                    assertThat("[0, 0][1, 0]\n[0, 1][1, 1]\n").isEqualTo(err.toString())
+                }
             }
         }
     }
-
 })
