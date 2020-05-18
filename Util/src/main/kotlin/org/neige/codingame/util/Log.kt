@@ -2,7 +2,7 @@ package org.neige.codingame.util
 
 object Log {
 
-    private const val LOGGABLE = false
+    private const val LOGGABLE = true
 
     fun debug(message: Any?) {
         if (LOGGABLE) {

@@ -19,7 +19,7 @@ object VectorSpec : Spek({
         }
 
         it("magnitude") {
-            assertThat(vector.magnitude()).isEqualTo(7710678118654755)
+            assertThat("%.2f".format(vector.magnitude()).toDouble()).isEqualTo(7.07)
         }
 
         describe("a second vector") {
