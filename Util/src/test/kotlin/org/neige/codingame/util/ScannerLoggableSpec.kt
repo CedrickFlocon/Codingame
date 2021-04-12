@@ -9,39 +9,27 @@ import java.io.PrintStream
 
 object ScannerLoggableSpec : Spek({
 
-    lateinit var err: ByteArrayOutputStream
+    val err by memoized { ByteArrayOutputStream() }
     val originalErr = System.err
 
-    beforeEachTest {
-        err = ByteArrayOutputStream()
-        System.setErr(PrintStream(err))
-    }
-
-    beforeEachGroup {
-        System.setErr(originalErr)
-    }
+    beforeEachTest { System.setErr(PrintStream(err)) }
+    beforeEachGroup { System.setErr(originalErr) }
 
     describe("a scanner") {
         val scanner by memoized { ScannerLoggable(this::class.java.classLoader.getResourceAsStream("input.txt")!!) }
 
-        describe("log Hello") {
-            lateinit var firstLine: String
-            lateinit var secondine: String
-            lateinit var thirdLine: String
-            beforeEachTest {
-                firstLine = scanner.nextLine()
-                secondine = scanner.nextLine()
-                thirdLine = scanner.nextLine()
-            }
+        describe("next stuff") {
+            it("should have data") {
+                assertThat(scanner.nextInt()).isEqualTo(35)
+                assertThat(scanner.nextInt()).isEqualTo(13)
+                assertThat(scanner.next()).isEqualTo("newline")
+                assertThat(scanner.nextLine()).isEqualTo("")
+                assertThat(scanner.nextLine()).isEqualTo("#####")
+                assertThat(scanner.nextInt()).isEqualTo(12)
 
-            it("should have the data") {
-                assertThat(firstLine).isEqualTo("35 13")
-                assertThat(secondine).isEqualTo("#####")
-                assertThat(thirdLine).isEqualTo("12")
-            }
-
-            it("should log string") {
-                assertThat("35 13\n" +
+                assertThat("35\n13\n" +
+                        "newline\n" +
+                        "\n" +
                         "#####\n" +
                         "12\n").isEqualTo(err.toString())
             }
