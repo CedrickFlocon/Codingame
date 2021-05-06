@@ -1,21 +1,20 @@
 package org.neige.codingame.totoro
 
-sealed class Action {
+sealed class Action(
+) {
 
-    fun play() {
-        println(command())
+    fun play(message: String? = null) {
+        println("${command()} ${message ?: ""}")
     }
 
     protected abstract fun command(): String
 
 }
 
-data class Wait(
-    private val message: String? = null
-) : Action() {
+class Wait() : Action() {
 
     override fun command(): String {
-        return "WAIT $message"
+        return "WAIT"
     }
 
 }
