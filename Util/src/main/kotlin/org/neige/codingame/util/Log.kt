@@ -5,13 +5,13 @@ object Log {
     var loggable = true
 
     fun debug(message: Any?) {
-        checkLoggable {
-            System.err.println(message)
-        }
+        { System.err.println(if (message is Debuggable) message.debug() else message) }
+            .takeIf { loggable }
+            ?.invoke()
     }
 
     fun <T> debug(board: Array<Array<T>>, stringify: (T) -> String) {
-        checkLoggable {
+        {
             (board[0].indices).forEach { y ->
                 var line = ""
                 board.indices.forEach { x ->
@@ -19,13 +19,7 @@ object Log {
                 }
                 debug(line)
             }
-        }
-    }
-
-    private fun checkLoggable(body: () -> Unit) {
-        if (loggable) {
-            body.invoke()
-        }
+        }.takeIf { loggable }?.invoke()
     }
 
 }
