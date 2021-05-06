@@ -5,7 +5,8 @@ import java.util.Scanner
 fun main() {
     val input = Scanner(System.`in`)
     val numberOfCells = input.nextInt() // 37
-    for (i in 0 until numberOfCells) {
+
+    val cells = (0 until numberOfCells).map {
         val index = input.nextInt() // 0 is the center cell, the next cells spiral outwards
         val richness = input.nextInt() // 0 if the cell is unusable, 1-3 for usable cells
         val neigh0 = input.nextInt() // the index of the neighbouring cell for each direction
@@ -14,6 +15,8 @@ fun main() {
         val neigh3 = input.nextInt()
         val neigh4 = input.nextInt()
         val neigh5 = input.nextInt()
+
+        Cell(index, richness)
     }
 
     // game loop
@@ -26,12 +29,16 @@ fun main() {
         val oppScore = input.nextInt() // opponent's score
         val oppIsWaiting = input.nextInt() != 0 // whether your opponent is asleep until the next day
         val numberOfTrees = input.nextInt() // the current amount of trees
-        for (i in 0 until numberOfTrees) {
+
+        val trees = (0 until numberOfTrees).map {
             val cellIndex = input.nextInt() // location of this tree
             val size = input.nextInt() // size of this tree: 0-3
             val isMine = input.nextInt() != 0 // 1 if this is your tree
             val isDormant = input.nextInt() != 0 // 1 if this tree is dormant
+
+            Tree(cellIndex, size, isMine, isDormant)
         }
+
         val numberOfPossibleMoves = input.nextInt()
         if (input.hasNextLine()) {
             input.nextLine()
@@ -40,11 +47,8 @@ fun main() {
             val possibleMove = input.nextLine()
         }
 
-        // Write an action using println()
-        // To debug: System.err.println("Debug messages...");
-
-
-        // GROW cellIdx | SEED sourceIdx targetIdx | COMPLETE cellIdx | WAIT <message>
-        println("WAIT")
+        (trees.firstOrNull { it.isMine }?.let {
+            Complete(it.cellId)
+        } ?: Wait()).play()
     }
 }
