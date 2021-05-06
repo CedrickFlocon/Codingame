@@ -47,8 +47,14 @@ fun main() {
             val possibleMove = input.nextLine()
         }
 
-        (trees.firstOrNull { it.isMine }?.let {
-            Complete(it.cellId)
-        } ?: Wait()).play()
+        (trees
+            .filter { it.isMine && it.size == 3 }
+            .firstOrNull()
+            ?.let { Complete(it.cellId) }
+            ?: trees
+                .filter { it.isMine }
+                .firstOrNull()
+                ?.let { Grow(it.cellId) }
+            ?: Wait()).play()
     }
 }
