@@ -5,30 +5,28 @@ import java.util.Scanner
 fun main() {
     val input = Scanner(System.`in`)
 
-    val game = Game(
-        Board(
-            (0 until input.nextInt()).map {
-                Cell(
-                    input.nextInt(),
-                    input.nextInt(),
-                    listOf(
-                        input.nextInt().takeIf { it != -1 },
-                        input.nextInt().takeIf { it != -1 },
-                        input.nextInt().takeIf { it != -1 },
-                        input.nextInt().takeIf { it != -1 },
-                        input.nextInt().takeIf { it != -1 },
-                        input.nextInt().takeIf { it != -1 }
-                    )
+    val board = Board(
+        (0 until input.nextInt()).map {
+            Cell(
+                input.nextInt(),
+                input.nextInt(),
+                listOf(
+                    input.nextInt().takeIf { it != -1 },
+                    input.nextInt().takeIf { it != -1 },
+                    input.nextInt().takeIf { it != -1 },
+                    input.nextInt().takeIf { it != -1 },
+                    input.nextInt().takeIf { it != -1 },
+                    input.nextInt().takeIf { it != -1 }
                 )
-            }
-        ),
-        Player(),
-        Player()
+            )
+        }
     )
+
+    val game = Game(board, Player(board), Player(board))
 
     while (true) {
         val day = input.nextInt() // the game lasts 24 days: 0-23
-        game.nutrients = input.nextInt() // the base score you gain from the next COMPLETE action
+        board.nutrients = input.nextInt() // the base score you gain from the next COMPLETE action
         game.me.sunPoints = input.nextInt() // your sun points
         game.me.score = input.nextInt() // your current score
         game.opponent.sunPoints = input.nextInt() // opponent's sun points
@@ -41,20 +39,20 @@ fun main() {
             val isMine = input.nextInt() != 0 // 1 if this is your tree
             val isDormant = input.nextInt() != 0 // 1 if this tree is dormant
 
-            Tree(cellIndex, size, isMine, isDormant)
+            Tree(cellIndex, size, if (isMine) game.me else game.opponent, isDormant)
         }
 
-        val numberOfPossibleMoves = input.nextInt()
+        game.numberOfPossibleMoves = input.nextInt()
         if (input.hasNextLine()) {
             input.nextLine()
         }
-        for (i in 0 until numberOfPossibleMoves) {
+
+        for (i in 0 until game.numberOfPossibleMoves) {
             val possibleMove = input.nextLine()
         }
 
         game.board.nextTurn(trees, day)
-        game.day = day
 
-        game.nextTurn()
+        game.play()
     }
 }

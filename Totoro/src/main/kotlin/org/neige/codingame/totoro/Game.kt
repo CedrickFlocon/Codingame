@@ -6,44 +6,53 @@ class Game(
     val opponent: Player
 ) {
 
-    var nutrients = 0
-    var day = 0
 
-    fun nextTurn() {
-        me.trees = board.myTrees
-        opponent.trees = board.opponentTrees
+    var numberOfPossibleMoves = 0
 
-        play()
-    }
+    fun play() {
+        val actions = me.actions()
 
-    private fun play() {
-        val completableTree = me.completableTree()
-            .sortedByDescending { it.cell.richness }
+        if (actions.size != numberOfPossibleMoves) {
+            throw RuntimeException("Number of possible moves not equals ${actions.size} != $numberOfPossibleMoves")
+        }
+
+        val complete = actions.filterIsInstance(Complete::class.java) //move linear complete tree
+            .sortedByDescending { it.tree.cell.richness }
+            .filter {
+                when (board.day.day) {
+                    in 0..20 -> {
+                        if (it.tree.tomorrowSpookySize) {
+                            me.growCost[3]!! > 10
+                        } else {
+                            me.growCost[3]!! > 13
+                        }
+                    }
+                    else -> true
+                }
+            }
             .firstOrNull()
 
-        val groawableTree = me.growableTree()
-            .filter { !it.tomorrowSpookySize }
-            .sortedByDescending { it.cell.richness }
+        val grow = actions.filterIsInstance(Grow::class.java)
+            .filter { !it.tree.tomorrowSpookySize } //grow if shadow will be smaller
+            .sortedByDescending { it.sunCost + it.tree.cell.richness }
             .firstOrNull()
-            .takeIf { day < 20 || completableTree == null }
+            ?.takeIf { board.day.dayCountDown > 2 - it.tree.size }
+            ?.takeIf { board.day.day < 20 || complete == null }
 
-        val seedableCell = board
-            .myTrees
-            .filter { !it.isDormant }
-            .flatMap { tree -> board.getNeighbors(tree.cell, tree.size).map { tree to it } }
-            .filter { it.second.tree == null }
-            .filter { it.second.richness > 0 }
-            .sortedByDescending { it.second.richness }
+        val seed = actions.filterIsInstance(Seed::class.java)
+            .sortedBy {
+                board.getNeighbors(it.cell, 1).sumBy { it.tree?.size ?: 0 }.toDouble() + (3 - it.cell.richness) //check distance 3 sum(treesize / distance)
+            }
             .firstOrNull()
-            .takeIf { me.sunPoints >= me.growCost[0]!! }
-            .takeIf { day < 13 }
+            .takeIf { board.day.dayCountDown > 4 }
+            .takeIf { me.growCost[0]!! < 2 && me.potentialSun > me.growCost[0]!! + 1 * 3 }
 
-        val action = groawableTree?.let { Grow(it.cellId) }
-            ?: completableTree?.let { Complete(it.cellId) }
-            ?: seedableCell?.let { Seed(it.first.cellId, it.second.id) }
-            ?: Wait()
+        val action = seed
+            ?: grow
+            ?: complete
+            ?: Wait
 
-        action.play(me.potentialSun.toString())
+        action.play()
     }
 
 }

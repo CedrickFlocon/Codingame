@@ -18,12 +18,9 @@ class Board(
 
     var trees = emptyList<Tree>()
         private set
-    var myTrees = emptyList<Tree>()
-        private set
-    var opponentTrees = emptyList<Tree>()
-        private set
-    var sun = Sun(0)
-        private set
+
+    var nutrients = 0
+    val day = Day(0)
 
     fun getNeighbors(cell: Cell, distance: Int): List<Cell> {
         val neighbors = cell.neighbors.filterNotNull()
@@ -37,7 +34,7 @@ class Board(
 
     fun nextTurn(trees: List<Tree>, day: Int) {
         this.trees = trees
-        this.sun.day = day
+        this.day.day = day
 
         cells.forEach {
             it.tree = null
@@ -48,11 +45,13 @@ class Board(
             cell.tree = tree
             tree.cell = cell
         }
-        myTrees = trees.filter { it.isMine }
-        opponentTrees = trees.filter { !it.isMine }
 
+        tomorrowShadow()
+    }
+
+    private fun tomorrowShadow() {
         cells
-            .filter { it.neighbors[sun.tomorrowShadowDirection] == null }
+            .filter { it.neighbors[day.tomorrowShadowDirection] == null }
             .forEach { borderCell ->
                 var originalCell: Cell? = borderCell
 
@@ -61,18 +60,14 @@ class Board(
                         cell.tree?.let { tree ->
                             var shadowCell = cell
                             for (i in tree.size downTo 1) {
-                                shadowCell = shadowCell.neighbors[sun.tomorrowSunDirection] ?: break
+                                shadowCell = shadowCell.neighbors[day.tomorrowSunDirection] ?: break
                                 shadowCell.tomorrowShadowSize = maxOf(tree.size, shadowCell.tomorrowShadowSize)
                             }
                         }
-                        originalCell = originalCell?.neighbors?.get(sun.tomorrowSunDirection)
+                        originalCell = originalCell?.neighbors?.get(day.tomorrowSunDirection)
                     }
                 } while (originalCell != null)
             }
-
-        debug()
     }
-
-    fun debug() {}
 
 }
