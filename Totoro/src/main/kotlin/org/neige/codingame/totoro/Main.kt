@@ -39,7 +39,7 @@ fun main() {
             val isMine = input.nextInt() != 0 // 1 if this is your tree
             val isDormant = input.nextInt() != 0 // 1 if this tree is dormant
 
-            Tree(cellIndex, size, if (isMine) game.me else game.opponent, isDormant)
+            Tree(cellIndex, size, if (isMine) game.me else game.opponent, isDormant, board.nutrients)
         }
 
         game.numberOfPossibleMoves = input.nextInt()
