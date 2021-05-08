@@ -90,10 +90,9 @@ class Seed(
 
     override fun toString(): String {
         return """
-            ${command()}
+            ${command()} Cost= $sunCost
             $tree
             $cell
-            $sunCost
         """.trimIndent()
     }
 
@@ -110,9 +109,8 @@ class Grow(
 
     override fun toString(): String {
         return """
-            ${command()}
+            ${command()} Cost=$sunCost
             $tree
-            $sunCost
         """.trimIndent()
     }
 }

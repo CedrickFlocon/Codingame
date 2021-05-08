@@ -11,6 +11,6 @@ data class Cell(
     var tomorrowShadowSize = 0
 
     override fun toString(): String {
-        return "Cell id : $id tomorrowShadowSize : $tomorrowShadowSize"
+        return "Cell[$id] tomorrowShadowSize : $tomorrowShadowSize"
     }
 }

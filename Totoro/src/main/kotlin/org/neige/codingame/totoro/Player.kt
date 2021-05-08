@@ -24,8 +24,6 @@ class Player(
 
         val buildActions = buildActions(myTrees.filter { !it.isDormant })
 
-        debug()
-
         return buildActions
     }
 
@@ -34,7 +32,7 @@ class Player(
         growCost[1] = 1 + myTrees.filter { it.size == 1 }.count()
         growCost[2] = 3 + myTrees.filter { it.size == 2 }.count()
         growCost[3] = 7 + myTrees.filter { it.size == 3 }.count()
-        potentialSun = myTrees.filter { !it.tomorrowSpookySize }.sumBy { it.size }
+        potentialSun = myTrees.sumBy { it.tomorrowSunPoint }
     }
 
     private fun buildActions(myActiveTree: List<Tree>): List<Action> {
@@ -64,6 +62,8 @@ class Player(
                 Grow 3 : ${growCost[3]}
             """.trimIndent()
         )
+
+        board.trees.filter { it.owner == this }.forEach { Log.debug(it) }
     }
 
 }
