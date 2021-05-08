@@ -12,9 +12,7 @@ class Game(
 
     fun play() {
         val actions = me.actions()
-        if (actions.size != numberOfPossibleMoves) {
-            throw RuntimeException("Number of possible moves not equals ${actions.size} != $numberOfPossibleMoves")
-        }
+        assert(actions.size == numberOfPossibleMoves)
 
         val completeAction = actions.filterIsInstance(Complete::class.java)
         val growAction = actions.filterIsInstance(Grow::class.java)
@@ -40,28 +38,36 @@ class Game(
             ?.also { Log.debug("Helping spooky $it") }
 
         val growTree = growAction
-            .filter { !it.tree.tomorrowSpooky }
             .sortedByDescending {
-                board.getNeighbors(it.tree.cell, 3).sumByDouble { ((it.first.tree?.size?.toDouble()?.plus(1) ?: 0.0) / it.second) } +
+                board.getNeighbors(it.tree.cell, 3)
+                    .filter { it.first.tree?.owner == opponent }
+                    .sumByDouble { ((it.first.tree?.size?.toDouble()?.plus(1) ?: 0.0) / it.second) } +
                         it.sunCost + it.tree.cell.richness
             }
             .firstOrNull()
-            ?.takeIf { board.day.day < 20 || completeTree == null }
 
         val seedTree = seedAction
             .sortedBy {
                 board.getNeighbors(it.cell, 3)
-                    .sumByDouble { ((it.first.tree?.size?.toDouble()?.plus(1) ?: 0.0) / it.second) } +
+                    .filter { it.first.tree?.owner == me }
+                    .sumByDouble { 1.0 / it.second } +
                         (3 - it.cell.richness)
             }
             .firstOrNull()
             .takeIf { me.growCost[0]!! < 2 && me.potentialSun > me.growCost[0]!! + 1 * 3 }
 
-        val action = growSpooky
-            ?: seedTree
-            ?: completeTree
-            ?: growTree
-            ?: Wait
+        val action =
+            (completeTree
+                ?: growTree
+                ?: seedTree)
+                ?.takeIf {
+                    val spookySize = growSpooky?.tree?.size ?: return@takeIf true
+                    val growTo = (it as? Grow)?.tree?.size?.plus(1)
+                    val sunPointLeft = me.sunPoints - it.sunCost
+                    sunPointLeft >= growSpooky.sunCost + if (growTo == spookySize) 1 else 0
+                }
+                ?: growSpooky
+                ?: Wait
 
         action.play()
     }
