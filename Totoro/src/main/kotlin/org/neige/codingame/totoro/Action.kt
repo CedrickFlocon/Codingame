@@ -1,5 +1,7 @@
 package org.neige.codingame.totoro
 
+import org.neige.codingame.util.Log
+
 sealed class Action(
     val sunCost: Int
 ) {
@@ -39,10 +41,11 @@ sealed class Action(
     }
 
     fun play(message: String? = null) {
+        Log.debug("Played action $this")
         println("${command()} ${message ?: QUOTE.random()}")
     }
 
-    abstract fun command(): String
+    protected abstract fun command(): String
 
 }
 
@@ -66,6 +69,13 @@ class Complete(
         return "COMPLETE ${tree.cellId}"
     }
 
+    override fun toString(): String {
+        return """
+            ${command()}
+            $tree
+        """.trimIndent()
+    }
+
 }
 
 class Seed(
@@ -76,6 +86,15 @@ class Seed(
 
     override fun command(): String {
         return "SEED ${tree.cellId} ${cell.id}"
+    }
+
+    override fun toString(): String {
+        return """
+            ${command()}
+            $tree
+            $cell
+            $sunCost
+        """.trimIndent()
     }
 
 }
@@ -89,4 +108,11 @@ class Grow(
         return "GROW ${tree.cellId}"
     }
 
+    override fun toString(): String {
+        return """
+            ${command()}
+            $tree
+            $sunCost
+        """.trimIndent()
+    }
 }

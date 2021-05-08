@@ -1,5 +1,7 @@
 package org.neige.codingame.totoro
 
+import org.neige.codingame.util.Log
+
 class Player(
     private val board: Board
 ) {
@@ -20,7 +22,11 @@ class Player(
         val myTrees = board.trees.filter { it.owner == this }
         buildSun(myTrees)
 
-        return buildActions(myTrees.filter { !it.isDormant })
+        val buildActions = buildActions(myTrees.filter { !it.isDormant })
+
+        debug()
+
+        return buildActions
     }
 
     private fun buildSun(myTrees: List<Tree>) {
@@ -42,11 +48,22 @@ class Player(
                     .filter { it.size > 0 && sunPoints >= growCost[0]!! }
                     .flatMap { tree ->
                         board.getNeighbors(tree.cell, tree.size)
-                            .filter { it.tree == null && it.richness > 0 }
-                            .map { tree to it }
+                            .filter { it.first.tree == null && it.first.richness > 0 }
+                            .map { tree to it.first }
                     }
                     .map { Seed(it.first, it.second, growCost[0]!!) } +
                 Wait
+    }
+
+    fun debug() {
+        Log.debug(
+            """
+                Grow 0: ${growCost[0]}
+                Grow 1 : ${growCost[1]}
+                Grow 2 : ${growCost[2]}
+                Grow 3 : ${growCost[3]}
+            """.trimIndent()
+        )
     }
 
 }

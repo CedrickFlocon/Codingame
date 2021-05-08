@@ -20,9 +20,6 @@ class Day(
     val tomorrowShadowDirection
         get() = (tomorrowSunDirection + Board.MAX_DIRECTION / 2) % Board.MAX_DIRECTION
 
-    val isLastDay
-        get() = day == MAX_DAY
-
     val dayCountDown: Int
         get() = MAX_DAY - day
 

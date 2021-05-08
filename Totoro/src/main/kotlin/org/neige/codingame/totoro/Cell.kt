@@ -10,4 +10,7 @@ data class Cell(
     var tree: Tree? = null
     var tomorrowShadowSize = 0
 
+    override fun toString(): String {
+        return "Cell id : $id tomorrowShadowSize : $tomorrowShadowSize"
+    }
 }

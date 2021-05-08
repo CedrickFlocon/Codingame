@@ -16,32 +16,30 @@ class Game(
             throw RuntimeException("Number of possible moves not equals ${actions.size} != $numberOfPossibleMoves")
         }
 
-        val complete = actions.filterIsInstance(Complete::class.java) //move linear complete tree
-            .sortedByDescending { it.tree.cell.richness }
-            .filter {
+        val complete = actions.filterIsInstance(Complete::class.java)
+            .sortedByDescending { (if (it.tree.tomorrowSpookySize) 3 else 0) + it.tree.cell.richness }
+            .firstOrNull()
+            .takeIf {
                 when (board.day.day) {
-                    in 0..20 -> {
-                        if (it.tree.tomorrowSpookySize) {
-                            me.growCost[3]!! > 10
-                        } else {
-                            me.growCost[3]!! > 13
-                        }
-                    }
+                    in 0..15 -> me.growCost[3]!! > 12
+                    in 15..18 -> me.growCost[3]!! > 10
+                    in 18..20 -> me.growCost[3]!! > 9
                     else -> true
                 }
             }
-            .firstOrNull()
 
         val grow = actions.filterIsInstance(Grow::class.java)
             .filter { !it.tree.tomorrowSpookySize } //grow if shadow will be smaller
-            .sortedByDescending { it.sunCost + it.tree.cell.richness }
+            .sortedByDescending {
+                it.sunCost + it.tree.cell.richness + board.getNeighbors(it.tree.cell, 3).sumByDouble { ((it.first.tree?.size?.toDouble()?.plus(1) ?: 0.0) / it.second) }
+            }
             .firstOrNull()
             ?.takeIf { board.day.dayCountDown > 2 - it.tree.size }
             ?.takeIf { board.day.day < 20 || complete == null }
 
         val seed = actions.filterIsInstance(Seed::class.java)
             .sortedBy {
-                board.getNeighbors(it.cell, 1).sumBy { it.tree?.size ?: 0 }.toDouble() + (3 - it.cell.richness) //check distance 3 sum(treesize / distance)
+                board.getNeighbors(it.cell, 3).sumByDouble { ((it.first.tree?.size?.toDouble()?.plus(1) ?: 0.0) / it.second) } + (3 - it.cell.richness)
             }
             .firstOrNull()
             .takeIf { board.day.dayCountDown > 4 }

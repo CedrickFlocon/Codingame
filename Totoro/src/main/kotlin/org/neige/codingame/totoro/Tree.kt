@@ -12,4 +12,8 @@ data class Tree(
     val tomorrowSpookySize: Boolean
         get() = cell.tomorrowShadowSize > 0 && cell.tomorrowShadowSize >= size
 
+
+    override fun toString(): String {
+        return "Tree  : cellId $cellId $tomorrowSpookySize"
+    }
 }

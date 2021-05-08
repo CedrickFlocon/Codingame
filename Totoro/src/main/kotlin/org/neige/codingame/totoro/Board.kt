@@ -1,5 +1,7 @@
 package org.neige.codingame.totoro
 
+import org.neige.codingame.util.Log
+
 class Board(
     private val cells: List<Cell>
 ) {
@@ -22,14 +24,13 @@ class Board(
     var nutrients = 0
     val day = Day(0)
 
-    fun getNeighbors(cell: Cell, distance: Int): List<Cell> {
-        val neighbors = cell.neighbors.filterNotNull()
+    fun getNeighbors(cell: Cell, distance: Int, distanceFromOrigin: Int = 1): List<Pair<Cell, Int>> {
+        val neighbors = cell.neighbors.filterNotNull().map { it to distanceFromOrigin }
 
         return (neighbors +
-                if (distance > 1) neighbors.flatMap { getNeighbors(it, distance - 1) } else emptyList())
-            .distinctBy { it.id }
-            .filter { it.id != cell.id }
-
+                if (distance > 1) neighbors.flatMap { getNeighbors(it.first, distance - 1, distanceFromOrigin + 1) } else emptyList())
+            .distinctBy { it.first.id }
+            .filter { it.first.id != cell.id }
     }
 
     fun nextTurn(trees: List<Tree>, day: Int) {
@@ -68,6 +69,10 @@ class Board(
                     }
                 } while (originalCell != null)
             }
+    }
+
+    private fun debug() {
+        cells.forEach { Log.debug(it) }
     }
 
 }
