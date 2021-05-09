@@ -1,5 +1,7 @@
 package org.neige.codingame.totoro
 
+import kotlin.math.pow
+
 class Game(
     val board: Board,
     val me: Player,
@@ -50,9 +52,12 @@ class Game(
         val seedAction = actions.filterIsInstance(Seed::class.java)
             .filter { board.day.dayCountDown > 4 }
             .onEach { action ->
-                action.score = board.getNeighbors(action.cell, 3)
+                val treeNumber = (0 until Board.MAX_DIRECTION)
+                    .flatMap { board.getNeighborsInSunDirection(action.cell, it, 3) }
                     .filter { it.first.tree?.owner == me }
-                    .sumByDouble { it.second.toDouble() - 3 } + action.cell.richness
+                    .count()
+
+                action.score = (action.cell.richness - treeNumber.toDouble().pow(2.0))
             }
 
 
@@ -65,7 +70,7 @@ class Game(
                     in 15..18 -> me.growCost[3]!! > 9
                     in 18..20 -> me.growCost[3]!! > 8
                     else -> true
-                }
+                } || it.score > 2
             }
 
         val growTree = growAction
@@ -75,6 +80,7 @@ class Game(
 
         val seedTree = seedAction
             .sortedByDescending { it.score }
+            .filter { it.score >= 0.0 }
             .firstOrNull()
             .takeIf { me.growCost[0]!! < 2 && me.potentialSun > me.growCost[0]!! + 1 * 3 }
 

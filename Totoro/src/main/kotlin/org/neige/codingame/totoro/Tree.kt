@@ -11,7 +11,7 @@ data class Tree(
     lateinit var cell: Cell
 
     val potentialScore: Int?
-        get() = if (size == 3) nutrients + cell.richnessScoreBonus else null
+        get() = if (size == 3) nutrients + cell.richnessScore else null
 
     val tomorrowSunPoint: Int
         get() = size.takeIf { tomorrowSpookyBy.isEmpty() } ?: 0

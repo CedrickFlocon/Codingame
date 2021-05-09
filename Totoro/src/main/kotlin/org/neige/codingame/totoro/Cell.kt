@@ -5,13 +5,17 @@ data class Cell(
     val richness: Int,
     val neighborsId: List<Int?>
 ) {
-    val richnessScoreBonus: Int
-        get() = when (richness) {
-            1 -> 0
-            2 -> 2
-            3 -> 4
-            else -> throw IllegalArgumentException()
-        }
+
+    companion object {
+        private val RICHNESS_SCORE_BONUS = mapOf(
+            1 to 0,
+            2 to 2,
+            3 to 4
+        )
+    }
+
+    val richnessScore: Int
+        get() = RICHNESS_SCORE_BONUS[richness] ?: throw IllegalArgumentException()
 
     val neighbors = mutableListOf<Cell?>()
 
@@ -22,4 +26,5 @@ data class Cell(
     override fun toString(): String {
         return "Cell[$id] SpookyBy : ${tomorrowSpookyBy.joinToString { "Tree ${it.cellId}" }}"
     }
+
 }
