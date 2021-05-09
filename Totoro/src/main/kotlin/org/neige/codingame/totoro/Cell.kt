@@ -16,9 +16,10 @@ data class Cell(
     val neighbors = mutableListOf<Cell?>()
 
     var tree: Tree? = null
-    var tomorrowShadowSize = 0
+
+    val tomorrowSpookyBy: MutableList<Tree> = mutableListOf()
 
     override fun toString(): String {
-        return "Cell[$id] tomorrowShadowSize : $tomorrowShadowSize"
+        return "Cell[$id] SpookyBy : ${tomorrowSpookyBy.joinToString { "Tree ${it.cellId}" }}"
     }
 }

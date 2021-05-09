@@ -14,15 +14,15 @@ data class Tree(
         get() = if (size == 3) nutrients + cell.richnessScoreBonus else null
 
     val tomorrowSunPoint: Int
-        get() = if (tomorrowSpooky) 0 else size
+        get() = size.takeIf { tomorrowSpookyBy.isEmpty() } ?: 0
 
-    val tomorrowSpooky: Boolean
-        get() = cell.tomorrowShadowSize > 0 && cell.tomorrowShadowSize >= size
+    val tomorrowSpookyBy: List<Tree>
+        get() = cell.tomorrowSpookyBy.filter { it.size >= size }
 
-    val tomorrowSpookySize: Int
-        get() = cell.tomorrowShadowSize - size
+    val tomorrowSpookySize: Int?
+        get() = cell.tomorrowSpookyBy.maxBy { it.size }?.size?.minus(size)
 
     override fun toString(): String {
-        return "Tree[$cellId] $tomorrowSpooky $tomorrowSunPoint $tomorrowSpookySize $potentialScore"
+        return "Tree[$cellId] ${tomorrowSpookyBy.joinToString { "Tree ${it.cellId}" }} $tomorrowSpookySize $tomorrowSunPoint $potentialScore"
     }
 }

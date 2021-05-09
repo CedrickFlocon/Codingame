@@ -3,7 +3,8 @@ package org.neige.codingame.totoro
 import org.neige.codingame.util.Log
 
 sealed class Action(
-    val sunCost: Int
+    val sunCost: Int,
+    var score: Double = 0.0
 ) {
 
     companion object {
@@ -71,7 +72,7 @@ class Complete(
 
     override fun toString(): String {
         return """
-            ${command()}
+            ${command()} score $score
             $tree
         """.trimIndent()
     }
@@ -90,7 +91,7 @@ class Seed(
 
     override fun toString(): String {
         return """
-            ${command()} Cost= $sunCost
+            ${command()} Cost= $sunCost score  $score
             $tree
             $cell
         """.trimIndent()
@@ -109,7 +110,7 @@ class Grow(
 
     override fun toString(): String {
         return """
-            ${command()} Cost=$sunCost
+            ${command()} Cost=$sunCost score  $score
             $tree
         """.trimIndent()
     }

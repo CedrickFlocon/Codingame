@@ -33,13 +33,24 @@ class Board(
             .filter { it.first.id != cell.id }
     }
 
+    fun getNeighborsInSunDirection(cell: Cell, sunDirection: Int, distance: Int, distanceFromOrigin: Int = 1): List<Pair<Cell, Int>> {
+        val neighbors = cell.neighbors[sunDirection] ?: return emptyList()
+
+        return listOf(neighbors to distance) +
+                if (distance > 1) {
+                    getNeighborsInSunDirection(neighbors, sunDirection, distance - 1, distanceFromOrigin + 1)
+                } else {
+                    emptyList()
+                }
+    }
+
     fun nextTurn(trees: List<Tree>, day: Int) {
         this.trees = trees
         this.day.day = day
 
         cells.forEach {
             it.tree = null
-            it.tomorrowShadowSize = 0
+            it.tomorrowSpookyBy.clear()
         }
         trees.forEach { tree ->
             val cell = cells.find { it.id == tree.cellId }!!
@@ -48,6 +59,8 @@ class Board(
         }
 
         tomorrowShadow()
+
+        //debug()
     }
 
     private fun tomorrowShadow() {
@@ -62,7 +75,7 @@ class Board(
                             var shadowCell = cell
                             for (i in tree.size downTo 1) {
                                 shadowCell = shadowCell.neighbors[day.tomorrowSunDirection] ?: break
-                                shadowCell.tomorrowShadowSize = maxOf(tree.size, shadowCell.tomorrowShadowSize)
+                                shadowCell.tomorrowSpookyBy.add(tree)
                             }
                         }
                         originalCell = originalCell?.neighbors?.get(day.tomorrowSunDirection)
@@ -72,7 +85,9 @@ class Board(
     }
 
     private fun debug() {
-        cells.forEach { Log.debug(it) }
+        cells.forEach {
+            Log.debug("Cell[${it.id}] ${getNeighborsInSunDirection(it, day.sunDirection, 3).joinToString { it.first.id.toString() }}")
+        }
     }
 
 }

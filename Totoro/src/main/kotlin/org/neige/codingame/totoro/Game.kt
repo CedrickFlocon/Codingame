@@ -1,7 +1,5 @@
 package org.neige.codingame.totoro
 
-import org.neige.codingame.util.Log
-
 class Game(
     val board: Board,
     val me: Player,
@@ -15,15 +13,51 @@ class Game(
         assert(actions.size == numberOfPossibleMoves)
 
         val completeAction = actions.filterIsInstance(Complete::class.java)
+            .onEach { action ->
+                val meSunPoint = board.trees.filter { it.owner == me }
+                    .filter { it.tomorrowSpookyBy.size == 1 && it.tomorrowSpookyBy.first() == action.tree }
+                    .sumBy { it.size }
+
+                val opponentSunPoint = board.trees.filter { it.owner == opponent }
+                    .filter { it.tomorrowSpookyBy.size == 1 && it.tomorrowSpookyBy.first() == action.tree }
+                    .sumBy { it.size }
+
+                val treeSunPoint = action.tree.tomorrowSunPoint
+                action.score = (meSunPoint - opponentSunPoint - treeSunPoint).toDouble()
+            }
         val growAction = actions.filterIsInstance(Grow::class.java)
             .filter { board.day.dayCountDown > 2 - it.tree.size }
+            .onEach { action ->
+                val opponentSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.tomorrowSunDirection, action.tree.size + 1)
+                    .mapNotNull { it.first.tree }
+                    .filter { it.owner == opponent }
+                    .filter { it.tomorrowSpookyBy.isEmpty() && it.size <= action.tree.size + 1 }
+                    .sumBy { it.size }
+
+                val meSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.tomorrowSunDirection, action.tree.size + 1)
+                    .mapNotNull { it.first.tree }
+                    .filter { it.owner == me }
+                    .filter { it.tomorrowSpookyBy.isEmpty() && it.size <= action.tree.size + 1 }
+                    .sumBy { it.size }
+
+                val treeSunWithoutAction = action.tree.tomorrowSunPoint
+                val treeSunWithAction = (action.tree.size + 1).takeIf { action.tree.tomorrowSpookySize == null || action.tree.tomorrowSpookySize == 0 } ?: 0
+
+                action.score = (treeSunWithAction - treeSunWithoutAction + opponentSunAvoid - meSunAvoid).toDouble()
+            }
         val seedAction = actions.filterIsInstance(Seed::class.java)
             .filter { board.day.dayCountDown > 4 }
+            .onEach { action ->
+                action.score = board.getNeighbors(action.cell, 3)
+                    .filter { it.first.tree?.owner == me }
+                    .sumByDouble { it.second.toDouble() - 3 } + action.cell.richness
+            }
+
 
         val completeTree = completeAction
-            .sortedByDescending { (if (it.tree.tomorrowSpooky) 3 else 0) + it.tree.cell.richness }
+            .sortedByDescending { it.score }
             .firstOrNull()
-            .takeIf {
+            ?.takeIf {
                 when (board.day.day) {
                     in 0..15 -> me.growCost[3]!! > 11
                     in 15..18 -> me.growCost[3]!! > 9
@@ -32,41 +66,20 @@ class Game(
                 }
             }
 
-        val growSpooky = growAction
-            .filter { it.tree.tomorrowSpooky && it.tree.tomorrowSpookySize == 0 }
-            .firstOrNull()
-            ?.also { Log.debug("Helping spooky $it") }
-
         val growTree = growAction
-            .sortedByDescending {
-                board.getNeighbors(it.tree.cell, 3)
-                    .filter { it.first.tree?.owner == opponent }
-                    .sumByDouble { ((it.first.tree?.size?.toDouble()?.plus(1) ?: 0.0) / it.second) } +
-                        it.sunCost + it.tree.cell.richness
-            }
+            .sortedByDescending { it.score }
             .firstOrNull()
+            ?.takeIf { board.day.day < 20 || completeTree == null }
 
         val seedTree = seedAction
-            .sortedBy {
-                board.getNeighbors(it.cell, 3)
-                    .filter { it.first.tree?.owner == me }
-                    .sumByDouble { 1.0 / it.second } +
-                        (3 - it.cell.richness)
-            }
+            .sortedByDescending { it.score }
             .firstOrNull()
             .takeIf { me.growCost[0]!! < 2 && me.potentialSun > me.growCost[0]!! + 1 * 3 }
 
         val action =
-            (completeTree
+            completeTree
                 ?: growTree
-                ?: seedTree)
-                ?.takeIf {
-                    val spookySize = growSpooky?.tree?.size ?: return@takeIf true
-                    val growTo = (it as? Grow)?.tree?.size?.plus(1)
-                    val sunPointLeft = me.sunPoints - it.sunCost
-                    sunPointLeft >= growSpooky.sunCost + if (growTo == spookySize) 1 else 0
-                }
-                ?: growSpooky
+                ?: seedTree
                 ?: Wait
 
         action.play()
