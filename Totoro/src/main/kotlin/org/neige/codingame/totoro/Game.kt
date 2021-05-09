@@ -31,19 +31,21 @@ class Game(
                 val opponentSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.tomorrowSunDirection, action.tree.size + 1)
                     .mapNotNull { it.first.tree }
                     .filter { it.owner == opponent }
-                    .filter { it.tomorrowSpookyBy.isEmpty() && it.size <= action.tree.size + 1 }
+                    .filter { it.tomorrowSpookyBy.isEmpty() && it.size <= action.expectedTreeSize }
                     .sumBy { it.size }
 
-                val meSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.tomorrowSunDirection, action.tree.size + 1)
+                val meSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.tomorrowSunDirection, action.expectedTreeSize)
                     .mapNotNull { it.first.tree }
                     .filter { it.owner == me }
-                    .filter { it.tomorrowSpookyBy.isEmpty() && it.size <= action.tree.size + 1 }
+                    .filter { it.tomorrowSpookyBy.isEmpty() && it.size <= action.expectedTreeSize }
                     .sumBy { it.size }
 
                 val treeSunWithoutAction = action.tree.tomorrowSunPoint
-                val treeSunWithAction = (action.tree.size + 1).takeIf { action.tree.tomorrowSpookySize == null || action.tree.tomorrowSpookySize == 0 } ?: 0
+                val treeSunWithAction = (action.expectedTreeSize).takeIf { action.tree.tomorrowSpookySize == null || action.tree.tomorrowSpookySize == 0 } ?: 0
 
-                action.score = (treeSunWithAction - treeSunWithoutAction + opponentSunAvoid - meSunAvoid).toDouble()
+                val growCostIncrease = (action.growCostIncrease).toDouble() / action.expectedTreeSize
+
+                action.score = (treeSunWithAction - treeSunWithoutAction + opponentSunAvoid - meSunAvoid).toDouble() - growCostIncrease
             }
         val seedAction = actions.filterIsInstance(Seed::class.java)
             .filter { board.day.dayCountDown > 4 }

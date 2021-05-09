@@ -28,10 +28,10 @@ class Player(
     }
 
     private fun buildSun(myTrees: List<Tree>) {
-        growCost[0] = 0 + myTrees.filter { it.size == 0 }.count()
-        growCost[1] = 1 + myTrees.filter { it.size == 1 }.count()
-        growCost[2] = 3 + myTrees.filter { it.size == 2 }.count()
-        growCost[3] = 7 + myTrees.filter { it.size == 3 }.count()
+        growCost[0] = myTrees.filter { it.size == 0 }.count()
+        growCost[1] = Grow.BASE_COST[1]!! + myTrees.filter { it.size == 1 }.count()
+        growCost[2] = Grow.BASE_COST[2]!! + myTrees.filter { it.size == 2 }.count()
+        growCost[3] = Grow.BASE_COST[3]!! + myTrees.filter { it.size == 3 }.count()
         potentialSun = myTrees.sumBy { it.tomorrowSunPoint }
     }
 

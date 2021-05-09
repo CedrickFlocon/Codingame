@@ -104,6 +104,20 @@ class Grow(
     sunCost: Int
 ) : Action(sunCost) {
 
+    companion object {
+        val BASE_COST = mapOf(
+            1 to 1,
+            2 to 3,
+            3 to 7
+        )
+    }
+
+    val expectedTreeSize: Int
+        get() = tree.size + 1
+
+    val growCostIncrease: Int
+        get() = sunCost - BASE_COST[expectedTreeSize]!!
+
     override fun command(): String {
         return "GROW ${tree.cellId}"
     }
