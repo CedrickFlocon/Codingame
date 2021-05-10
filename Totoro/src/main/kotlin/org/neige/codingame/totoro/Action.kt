@@ -75,8 +75,7 @@ class Complete(
 
     override fun toString(): String {
         return """
-            ${command()} score $score
-            $tree
+            ${command()} Score=$score
         """.trimIndent()
     }
 
@@ -97,9 +96,7 @@ class Seed(
 
     override fun toString(): String {
         return """
-            ${command()} Cost= $sunCost score  $score
-            $tree
-            $cell
+            ${command()} Cost=$sunCost Score=$score
         """.trimIndent()
     }
 
@@ -130,8 +127,7 @@ class Grow(
 
     override fun toString(): String {
         return """
-            ${command()} Cost=$sunCost score  $score
-            $tree
+         ${command()} Cost=$sunCost Score=$score
         """.trimIndent()
     }
 }
