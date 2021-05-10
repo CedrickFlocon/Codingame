@@ -19,39 +19,45 @@ class Game(
 
         val completeAction = actions.filterIsInstance(Complete::class.java)
             .onEach { action ->
-                val meSunPoint = board.trees.filter { it.owner == me }
-                    .filter { it.tomorrowSpookyBy.size == 1 && it.tomorrowSpookyBy.first() == action.tree }
-                    .sumBy { it.size }
+                action.score = (1..board.day.dayCountDown).map { day ->
+                    val meSunPoint = board.trees.filter { it.owner == me }
+                        .filter { it.spookyBy[day]!!.size == 1 && it.spookyBy[day]!!.first() == action.tree }
+                        .sumBy { it.size }
 
-                val opponentSunPoint = board.trees.filter { it.owner == opponent }
-                    .filter { it.tomorrowSpookyBy.size == 1 && it.tomorrowSpookyBy.first() == action.tree }
-                    .sumBy { it.size }
+                    val opponentSunPoint = board.trees.filter { it.owner == opponent }
+                        .filter { it.spookyBy[day]!!.size == 1 && it.spookyBy[day]!!.first() == action.tree }
+                        .sumBy { it.size }
 
-                action.score = (meSunPoint - opponentSunPoint - action.tree.tomorrowSunPoint).toDouble()
+                    ((meSunPoint - opponentSunPoint - action.tree.sunPoint[day]!!).toDouble() / day.toDouble().pow(2)).also {
+                        //Log.debug("($meSunPoint - $opponentSunPoint - ${action.tree.sunPoint[day]!!}) * ${day.toDouble().pow(2)} = $it")
+                    }
+                }.sum()
                 //Log.debug(action)
-                //Log.debug("$meSunPoint - $opponentSunPoint - ${action.tree.tomorrowSunPoint}} = ${action.score}")
             }
         val growAction = actions.filterIsInstance(Grow::class.java)
             .filter { board.day.dayCountDown > 2 - it.tree.size }
             .onEach { action ->
-                val opponentSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.tomorrowSunDirection, action.tree.size + 1)
-                    .mapNotNull { it.first.tree }
-                    .filter { it.owner == opponent }
-                    .filter { it.tomorrowSpookyBy.isEmpty() && it.size <= action.expectedTreeSize }
-                    .sumBy { it.size }
+                action.score = (1..board.day.dayCountDown).map { day ->
+                    val opponentSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.sunDirectionIn(day), action.tree.size + 1)
+                        .mapNotNull { it.first.tree }
+                        .filter { it.owner == opponent }
+                        .filter { it.spookyBy[day]!!.isEmpty() && it.size <= action.expectedTreeSize }
+                        .sumBy { it.size }
 
-                val meSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.tomorrowSunDirection, action.expectedTreeSize)
-                    .mapNotNull { it.first.tree }
-                    .filter { it.owner == me }
-                    .filter { it.tomorrowSpookyBy.isEmpty() && it.size <= action.expectedTreeSize }
-                    .sumBy { it.size }
+                    val meSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.sunDirectionIn(day), action.expectedTreeSize)
+                        .mapNotNull { it.first.tree }
+                        .filter { it.owner == me }
+                        .filter { it.spookyBy[day]!!.isEmpty() && it.size <= action.expectedTreeSize }
+                        .sumBy { it.size }
 
-                val treeSunWithoutAction = action.tree.tomorrowSunPoint
-                val treeSunWithAction = (action.expectedTreeSize).takeIf { action.tree.tomorrowSpookySize ?: 0 <= 0 } ?: 0
+                    val treeSunWithoutAction = action.tree.sunPoint[day]!!
+                    val treeSunWithAction = (action.expectedTreeSize).takeIf { action.tree.spookySize[day] ?: 0 <= 0 } ?: 0
 
-                action.score = (treeSunWithAction - treeSunWithoutAction + opponentSunAvoid - meSunAvoid).toDouble()
-                //Log.debug(action)
-                //Log.debug("$treeSunWithAction - $treeSunWithoutAction + $opponentSunAvoid - $meSunAvoid = ${action.score}")
+                    ((treeSunWithAction - treeSunWithoutAction + opponentSunAvoid - meSunAvoid).toDouble() / day.toDouble().pow(2)).also {
+                        //Log.debug("($treeSunWithAction - $treeSunWithoutAction + $opponentSunAvoid - $meSunAvoid) / ${day.toDouble().pow(2)} = $it")
+                    }
+                }.sum()
+                //Log.debug("==>${action.score}")
             }
         val seedAction = actions.filterIsInstance(Seed::class.java)
             .filter { board.day.dayCountDown > 4 }

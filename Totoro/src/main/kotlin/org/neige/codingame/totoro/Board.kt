@@ -50,7 +50,7 @@ class Board(
 
         cells.forEach {
             it.tree = null
-            it.tomorrowSpookyBy.clear()
+            it.spookyBy.forEach { it.value.clear() }
         }
         trees.forEach { tree ->
             val cell = cells.find { it.id == tree.cellId }!!
@@ -58,35 +58,37 @@ class Board(
             tree.cell = cell
         }
 
-        tomorrowShadow()
+        buildShadow()
 
         //debug()
     }
 
-    private fun tomorrowShadow() {
-        cells
-            .filter { it.neighbors[day.tomorrowShadowDirection] == null }
-            .forEach { borderCell ->
-                var originalCell: Cell? = borderCell
+    private fun buildShadow() {
+        (1..day.dayCountDown).forEach { nextDay ->
+            cells
+                .filter { it.neighbors[day.oppositeSunDirectionIn(nextDay)] == null }
+                .forEach { borderCell ->
+                    var originalCell: Cell? = borderCell
 
-                do {
-                    originalCell?.let { cell ->
-                        cell.tree?.let { tree ->
-                            var shadowCell = cell
-                            for (i in tree.size downTo 1) {
-                                shadowCell = shadowCell.neighbors[day.tomorrowSunDirection] ?: break
-                                shadowCell.tomorrowSpookyBy.add(tree)
+                    do {
+                        originalCell?.let { cell ->
+                            cell.tree?.let { tree ->
+                                var shadowCell = cell
+                                for (i in tree.size downTo 1) {
+                                    shadowCell = shadowCell.neighbors[day.sunDirectionIn(nextDay)] ?: break
+                                    shadowCell.spookyBy[nextDay]!!.add(tree)
+                                }
                             }
+                            originalCell = originalCell?.neighbors?.get(day.sunDirectionIn(nextDay))
                         }
-                        originalCell = originalCell?.neighbors?.get(day.tomorrowSunDirection)
-                    }
-                } while (originalCell != null)
-            }
+                    } while (originalCell != null)
+                }
+        }
     }
 
     private fun debug() {
         cells.forEach {
-            Log.debug("Cell[${it.id}] ${getNeighborsInSunDirection(it, day.sunDirection, 3).joinToString { it.first.id.toString() }}")
+            Log.debug(it)
         }
     }
 

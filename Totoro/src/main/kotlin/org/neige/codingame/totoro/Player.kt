@@ -32,7 +32,7 @@ class Player(
         growCost[1] = Grow.BASE_COST[1]!! + myTrees.filter { it.size == 1 }.count()
         growCost[2] = Grow.BASE_COST[2]!! + myTrees.filter { it.size == 2 }.count()
         growCost[3] = Grow.BASE_COST[3]!! + myTrees.filter { it.size == 3 }.count()
-        potentialSun = myTrees.sumBy { it.tomorrowSunPoint }
+        potentialSun = myTrees.sumBy { it.sunPoint[1]!! }
     }
 
     private fun buildActions(myActiveTree: List<Tree>): List<Action> {

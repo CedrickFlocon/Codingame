@@ -21,10 +21,13 @@ data class Cell(
 
     var tree: Tree? = null
 
-    val tomorrowSpookyBy: MutableList<Tree> = mutableListOf()
+    val spookyBy: Map<Int, MutableList<Tree>> = (1..Day.MAX_DAY).map { it to mutableListOf<Tree>() }.toMap()
 
     override fun toString(): String {
-        return "Cell[$id] SpookyBy : ${tomorrowSpookyBy.joinToString { "Tree ${it.cellId}" }}"
+        return """
+            Cell[$id]
+            ${spookyBy.filter { it.key <= Day.MAX_DAY }.map { it.value.joinToString() }}
+        """.trimIndent()
     }
 
 }

@@ -14,16 +14,17 @@ data class Tree(
 
     lateinit var cell: Cell
 
-    val tomorrowSunPoint: Int
-        get() = size.takeIf { tomorrowSpookyBy.isEmpty() } ?: 0
+    val spookyBy: Map<Int, List<Tree>>
+        get() = cell.spookyBy.map { it.key to it.value.filter { it.size >= size } }.toMap()
 
-    val tomorrowSpookyBy: List<Tree>
-        get() = cell.tomorrowSpookyBy.filter { it.size >= size }
+    val sunPoint: Map<Int, Int>
+        get() = spookyBy.map { (day, trees) -> day to (size.takeIf { trees.isEmpty() } ?: 0) }.toMap()
 
-    val tomorrowSpookySize: Int?
-        get() = cell.tomorrowSpookyBy.maxBy { it.size }?.size?.minus(size)
+    val spookySize: Map<Int, Int?>
+        get() = cell.spookyBy.map { (day, trees) -> day to trees.maxBy { it.size }?.size?.minus(size) }.toMap()
 
     override fun toString(): String {
-        return "Tree[$cellId] ${tomorrowSpookyBy.joinToString { "Tree ${it.cellId}" }} $tomorrowSpookySize $tomorrowSunPoint"
+        return "Tree[$cellId]"
     }
+
 }
