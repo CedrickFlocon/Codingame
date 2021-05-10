@@ -1,5 +1,6 @@
 package org.neige.codingame.totoro
 
+import org.neige.codingame.util.Log
 import kotlin.math.pow
 
 class Game(
@@ -14,6 +15,8 @@ class Game(
         val actions = me.actions()
         assert(actions.size == numberOfPossibleMoves)
 
+        debug()
+
         val completeAction = actions.filterIsInstance(Complete::class.java)
             .onEach { action ->
                 val meSunPoint = board.trees.filter { it.owner == me }
@@ -24,8 +27,9 @@ class Game(
                     .filter { it.tomorrowSpookyBy.size == 1 && it.tomorrowSpookyBy.first() == action.tree }
                     .sumBy { it.size }
 
-                val treeSunPoint = action.tree.tomorrowSunPoint
-                action.score = (meSunPoint - opponentSunPoint - treeSunPoint).toDouble()
+                action.score = (meSunPoint - opponentSunPoint - action.tree.tomorrowSunPoint).toDouble()
+
+                //Log.debug("Complete[${action.tree.cellId}] : $meSunPoint - $opponentSunPoint - ${action.tree.tomorrowSunPoint}} = ${action.score}")
             }
         val growAction = actions.filterIsInstance(Grow::class.java)
             .filter { board.day.dayCountDown > 2 - it.tree.size }
@@ -45,7 +49,7 @@ class Game(
                 val treeSunWithoutAction = action.tree.tomorrowSunPoint
                 val treeSunWithAction = (action.expectedTreeSize).takeIf { action.tree.tomorrowSpookySize == null || action.tree.tomorrowSpookySize == 0 } ?: 0
 
-                val growCostIncrease = (action.growCostIncrease).toDouble() / action.expectedTreeSize
+                val growCostIncrease = (action.extraCost).toDouble() / action.expectedTreeSize
 
                 action.score = (treeSunWithAction - treeSunWithoutAction + opponentSunAvoid - meSunAvoid).toDouble() - growCostIncrease
             }
@@ -53,11 +57,12 @@ class Game(
             .filter { board.day.dayCountDown > 4 }
             .onEach { action ->
                 val treeNumber = (0 until Board.MAX_DIRECTION)
-                    .flatMap { board.getNeighborsInSunDirection(action.cell, it, 3) }
+                    .flatMap { board.getNeighborsInSunDirection(action.cell, it, Tree.MAX_SIZE) }
                     .filter { it.first.tree?.owner == me }
                     .count()
 
                 action.score = (action.cell.richness - treeNumber.toDouble().pow(2.0))
+                //Log.debug("Seed[${action.cell.id}] : ${action.cell.richness} - ${treeNumber.toDouble().pow(2.0)} = ${action.score}")
             }
 
 
@@ -66,11 +71,11 @@ class Game(
             .firstOrNull()
             ?.takeIf {
                 when (board.day.day) {
-                    in 0..15 -> me.growCost[3]!! > 11
-                    in 15..18 -> me.growCost[3]!! > 9
-                    in 18..20 -> me.growCost[3]!! > 8
+                    in 0..15 -> me.growCost[Tree.MAX_SIZE]!! > 11
+                    in 15..18 -> me.growCost[Tree.MAX_SIZE]!! > 9
+                    in 18..20 -> me.growCost[Tree.MAX_SIZE]!! > 8
                     else -> true
-                } || it.score > 2
+                } || it.score > 1
             }
 
         val growTree = growAction
@@ -82,15 +87,23 @@ class Game(
             .sortedByDescending { it.score }
             .filter { it.score >= 0.0 }
             .firstOrNull()
-            .takeIf { me.growCost[0]!! < 2 && me.potentialSun > me.growCost[0]!! + 1 * 3 }
+            ?.takeIf { it.extraCost == 0 && me.potentialSun > 3 }
 
-        val action =
-            completeTree
-                ?: growTree
-                ?: seedTree
-                ?: Wait
+        val action = seedTree
+            ?: completeTree
+            ?: growTree
+            ?: Wait
 
         action.play()
+    }
+
+    private fun debug() {
+        Log.debug("day : ${board.day.day} nutrients : ${board.nutrients}")
+        with(board.trees.filter { it.owner == me }) { Log.debug("Me ${(0..Tree.MAX_SIZE).joinToString { size -> "$size:${this.count { it.size == size }}" }}") }
+        with(board.trees.filter { it.owner == opponent }) { Log.debug("Op ${(0..Tree.MAX_SIZE).joinToString { size -> "$size:${this.count { it.size == size }}" }}") }
+
+        Log.debug("Me ${(0..Tree.MAX_SIZE).joinToString { "$it:${me.growCost[it]!!}" }}")
+        Log.debug("Op ${(0..Tree.MAX_SIZE).joinToString { "$it:${opponent.growCost[it]!!}" }}")
     }
 
 }

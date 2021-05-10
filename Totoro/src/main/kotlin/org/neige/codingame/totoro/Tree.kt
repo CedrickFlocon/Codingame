@@ -8,10 +8,11 @@ data class Tree(
     val nutrients: Int
 ) {
 
-    lateinit var cell: Cell
+    companion object {
+        const val MAX_SIZE = 3
+    }
 
-    val potentialScore: Int?
-        get() = if (size == 3) nutrients + cell.richnessScore else null
+    lateinit var cell: Cell
 
     val tomorrowSunPoint: Int
         get() = size.takeIf { tomorrowSpookyBy.isEmpty() } ?: 0
@@ -23,6 +24,6 @@ data class Tree(
         get() = cell.tomorrowSpookyBy.maxBy { it.size }?.size?.minus(size)
 
     override fun toString(): String {
-        return "Tree[$cellId] ${tomorrowSpookyBy.joinToString { "Tree ${it.cellId}" }} $tomorrowSpookySize $tomorrowSunPoint $potentialScore"
+        return "Tree[$cellId] ${tomorrowSpookyBy.joinToString { "Tree ${it.cellId}" }} $tomorrowSpookySize $tomorrowSunPoint"
     }
 }

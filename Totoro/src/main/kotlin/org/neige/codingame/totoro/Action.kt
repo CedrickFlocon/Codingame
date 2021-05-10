@@ -66,6 +66,9 @@ class Complete(
         const val COMPLETE_COST = 4
     }
 
+    val potentialScore: Int
+        get() = tree.nutrients + tree.cell.richnessScore
+
     override fun command(): String {
         return "COMPLETE ${tree.cellId}"
     }
@@ -84,6 +87,9 @@ class Seed(
     val cell: Cell,
     sunCost: Int
 ) : Action(sunCost) {
+
+    val extraCost: Int
+        get() = sunCost
 
     override fun command(): String {
         return "SEED ${tree.cellId} ${cell.id}"
@@ -115,7 +121,7 @@ class Grow(
     val expectedTreeSize: Int
         get() = tree.size + 1
 
-    val growCostIncrease: Int
+    val extraCost: Int
         get() = sunCost - BASE_COST[expectedTreeSize]!!
 
     override fun command(): String {

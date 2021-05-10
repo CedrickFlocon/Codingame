@@ -37,10 +37,10 @@ class Player(
 
     private fun buildActions(myActiveTree: List<Tree>): List<Action> {
         return myActiveTree
-            .filter { it.size < 3 && sunPoints >= growCost[it.size + 1]!! }
+            .filter { it.size < Tree.MAX_SIZE && sunPoints >= growCost[it.size + 1]!! }
             .map { Grow(it, growCost[it.size + 1]!!) } +
                 myActiveTree
-                    .filter { it.size == 3 && sunPoints >= Complete.COMPLETE_COST }
+                    .filter { it.size == Tree.MAX_SIZE && sunPoints >= Complete.COMPLETE_COST }
                     .map { Complete(it) } +
                 myActiveTree
                     .filter { it.size > 0 && sunPoints >= growCost[0]!! }
