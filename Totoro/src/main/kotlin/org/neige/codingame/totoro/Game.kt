@@ -92,6 +92,9 @@ class Game(
             ?.sortedByDescending { it.tree.cell.richness }
             ?.firstOrNull()
             ?.takeIf { board.day.day < 20 || completeTree == null }
+        val lastSeed = actions.filterIsInstance(Seed::class.java)
+            .firstOrNull()
+            ?.takeIf { board.day.dayCountDown == 0 && me.sunPoints % 3 >= it.sunCost }
 
         val seedTree = seedAction
             .sortedByDescending { it.score }
@@ -101,7 +104,7 @@ class Game(
 
         val action = completeTree
             ?: growTree
-            ?: seedTree
+            ?: seedTree ?: lastSeed
             ?: Wait
 
         action.play()

@@ -8,6 +8,7 @@ class Board(
 
     companion object {
         const val MAX_DIRECTION = 6
+        const val MAX_NUTRIENTS = 20
     }
 
     init {

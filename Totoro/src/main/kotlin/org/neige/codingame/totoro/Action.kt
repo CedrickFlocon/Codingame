@@ -1,6 +1,7 @@
 package org.neige.codingame.totoro
 
 import org.neige.codingame.util.Log
+import kotlin.math.roundToInt
 
 sealed class Action(
     val sunCost: Int,
@@ -75,7 +76,7 @@ class Complete(
 
     override fun toString(): String {
         return """
-            ${command()} Score=$score
+            ${command()} Score=${score.round(2)}
         """.trimIndent()
     }
 
@@ -96,7 +97,7 @@ class Seed(
 
     override fun toString(): String {
         return """
-            ${command()} Cost=$sunCost Score=$score
+            ${command()} Cost=$sunCost Score=${score.round(2)}
         """.trimIndent()
     }
 
@@ -127,7 +128,13 @@ class Grow(
 
     override fun toString(): String {
         return """
-         ${command()} Cost=$sunCost Score=$score
+         ${command()} Cost=$sunCost Score=${score.round(2)}
         """.trimIndent()
     }
+}
+
+fun Double.round(decimals: Int): Double {
+    var multiplier = 1.0
+    repeat(decimals) { multiplier *= 10 }
+    return (this * multiplier).roundToInt() / multiplier
 }
