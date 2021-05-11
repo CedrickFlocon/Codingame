@@ -49,10 +49,7 @@ class Board(
         this.trees = trees
         this.day.day = day
 
-        cells.forEach {
-            it.tree = null
-            it.spookyBy.forEach { it.value.clear() }
-        }
+        cells.forEach { it.tree = null }
         trees.forEach { tree ->
             val cell = cells.find { it.id == tree.cellId }!!
             cell.tree = tree
@@ -64,7 +61,18 @@ class Board(
         //debug()
     }
 
-    private fun buildShadow() {
+    fun play(action: Action) {
+        when (action) {
+            is Wait -> return
+            is Complete -> nextTurn(trees.filter { it != action.tree }, day.day)
+            is Seed -> return
+            is Grow -> nextTurn(trees.filter { it != action.tree } + action.tree.copy(size = action.expectedTreeSize), day.day)
+        }
+    }
+
+    fun buildShadow() {
+        cells.forEach { it.spookyBy.forEach { it.value.clear() } }
+
         (1..day.dayCountDown).forEach { nextDay ->
             cells
                 .filter { it.neighbors[day.oppositeSunDirectionIn(nextDay)] == null }

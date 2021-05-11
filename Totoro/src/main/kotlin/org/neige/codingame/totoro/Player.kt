@@ -22,9 +22,7 @@ class Player(
         val myTrees = board.trees.filter { it.owner == this }
         buildSun(myTrees)
 
-        val buildActions = buildActions(myTrees.filter { !it.isDormant })
-
-        return buildActions
+        return buildActions(myTrees.filter { !it.isDormant })
     }
 
     private fun buildSun(myTrees: List<Tree>) {
@@ -38,10 +36,10 @@ class Player(
     private fun buildActions(myActiveTree: List<Tree>): List<Action> {
         return myActiveTree
             .filter { it.size < Tree.MAX_SIZE && sunPoints >= growCost[it.size + 1]!! }
-            .map { Grow(it, growCost[it.size + 1]!!) } +
+            .map { Grow(this, it) } +
                 myActiveTree
                     .filter { it.size == Tree.MAX_SIZE && sunPoints >= Complete.COMPLETE_COST }
-                    .map { Complete(it) } +
+                    .map { Complete(this, it) } +
                 myActiveTree
                     .filter { it.size > 0 && sunPoints >= growCost[0]!! }
                     .flatMap { tree ->
@@ -49,8 +47,8 @@ class Player(
                             .filter { it.first.tree == null && it.first.richness > 0 }
                             .map { tree to it.first }
                     }
-                    .map { Seed(it.first, it.second, growCost[0]!!) } +
-                Wait
+                    .map { Seed(this, it.first, it.second) } +
+                Wait(this)
     }
 
     fun debug() {

@@ -4,6 +4,7 @@ import org.neige.codingame.util.Log
 import kotlin.math.roundToInt
 
 sealed class Action(
+    val player: Player,
     val sunCost: Int,
     var score: Double = 0.0
 ) {
@@ -43,7 +44,7 @@ sealed class Action(
     }
 
     fun play(message: String? = null) {
-        Log.debug("Played action $this")
+        Log.debug("MyAction $this")
         println("${command()} ${message ?: QUOTE.random()}")
     }
 
@@ -51,17 +52,24 @@ sealed class Action(
 
 }
 
-object Wait : Action(0) {
+class Wait(player: Player) : Action(player, 0) {
 
     override fun command(): String {
         return "WAIT"
     }
 
+    override fun toString(): String {
+        return """
+            ${command()}
+        """.trimIndent()
+    }
+
 }
 
 class Complete(
+    player: Player,
     val tree: Tree
-) : Action(COMPLETE_COST) {
+) : Action(player, COMPLETE_COST) {
 
     companion object {
         const val COMPLETE_COST = 4
@@ -83,10 +91,10 @@ class Complete(
 }
 
 class Seed(
+    player: Player,
     val tree: Tree,
-    val cell: Cell,
-    sunCost: Int
-) : Action(sunCost) {
+    val cell: Cell
+) : Action(player, player.growCost[0]!!) {
 
     val extraCost: Int
         get() = sunCost
@@ -104,9 +112,9 @@ class Seed(
 }
 
 class Grow(
-    val tree: Tree,
-    sunCost: Int
-) : Action(sunCost) {
+    player: Player,
+    val tree: Tree
+) : Action(player, player.growCost[tree.size + 1]!!) {
 
     companion object {
         val BASE_COST = mapOf(

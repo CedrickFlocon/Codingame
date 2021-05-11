@@ -2,7 +2,7 @@ package org.neige.codingame.totoro
 
 data class Tree(
     val cellId: Int,
-    val size: Int,
+    var size: Int,
     val owner: Player,
     val isDormant: Boolean,
     val nutrients: Int
