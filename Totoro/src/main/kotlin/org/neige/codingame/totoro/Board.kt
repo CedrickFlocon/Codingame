@@ -64,10 +64,10 @@ class Board(
     fun play(action: Action) {
         when (action) {
             is Wait -> return
-            is Complete -> nextTurn(trees.filter { it != action.tree }, day.day)
-            is Seed -> return
-            is Grow -> nextTurn(trees.filter { it != action.tree } + action.tree.copy(size = action.expectedTreeSize), day.day)
-        }
+            is Complete -> nextTurn(trees.filter { it != action.tree }, day.day).also { nutrients -= 1 }
+            is Seed -> nextTurn(trees + Tree(action.cell.id, 0, action.player, true, nutrients), day.day)
+            is Grow -> nextTurn(trees.filter { it != action.tree } + action.tree.copy(size = action.expectedTreeSize, isDormant = true), day.day)
+        }.also { action.player.sunPoints -= action.sunCost }
     }
 
     fun buildShadow() {

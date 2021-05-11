@@ -48,6 +48,8 @@ sealed class Action(
         println("${command()} ${message ?: QUOTE.random()}")
     }
 
+    open val extraCost: Int = 0
+
     protected abstract fun command(): String
 
 }
@@ -96,7 +98,7 @@ class Seed(
     val cell: Cell
 ) : Action(player, player.growCost[0]!!) {
 
-    val extraCost: Int
+    override val extraCost: Int
         get() = sunCost
 
     override fun command(): String {
@@ -105,7 +107,7 @@ class Seed(
 
     override fun toString(): String {
         return """
-            ${command()} Cost=$sunCost Score=${score.round(2)}
+            ${command()} Cost=$sunCost ExtraCost=$extraCost Score=${score.round(2)}
         """.trimIndent()
     }
 
@@ -127,7 +129,7 @@ class Grow(
     val expectedTreeSize: Int
         get() = tree.size + 1
 
-    val extraCost: Int
+    override val extraCost: Int
         get() = sunCost - BASE_COST[expectedTreeSize]!!
 
     override fun command(): String {
@@ -136,7 +138,7 @@ class Grow(
 
     override fun toString(): String {
         return """
-         ${command()} Cost=$sunCost Score=${score.round(2)}
+         ${command()} Cost=$sunCost ExtraCost=$extraCost Score=${score.round(2)}
         """.trimIndent()
     }
 }

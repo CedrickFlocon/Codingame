@@ -21,7 +21,7 @@ class Game(
 
         buildScore(opponentActions)
         val opponentAction = selectAction(opponentActions)
-        board.play(opponentAction)
+        opponentAction.takeIf { it !is Seed }?.let { board.play(opponentAction) }
 
         buildScore(possibleMove)
 
