@@ -51,10 +51,9 @@ class Game(
                     ((playerSunPoint - opponentSunPoint - action.tree.sunPoint[day]!!).toDouble() / day.toDouble().pow(2))
                 }.sum()
 
-                action.score = sunToScore(
-                    (sunImpact + ((action.player.growCost[3]!! - Grow.BASE_COST[3]!!).toDouble() / 3))
-                            * board.day.countDownPercentage
-                ) + action.tree.cell.richness.toDouble() / 10
+                action.score = sunToScore((sunImpact + ((action.player.growCost[3]!! - Grow.BASE_COST[3]!!).toDouble() / 3)) * board.day.countDownPercentage) +
+                        (action.tree.cell.richness.toDouble() / 10) +
+                        sunToScore(action.player.potentialSun.toDouble() / 100)
             }
 
         actions.filterIsInstance(Grow::class.java)
