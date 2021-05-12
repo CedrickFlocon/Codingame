@@ -23,6 +23,9 @@ class Board(
         private set
 
     var nutrients = 0
+    val nutrientsPercentage: Double
+        get() = nutrients.toDouble() / MAX_NUTRIENTS
+
     val day = Day(0)
 
     fun getNeighbors(cell: Cell, distance: Int, distanceFromOrigin: Int = 1): List<Pair<Cell, Int>> {
@@ -58,7 +61,7 @@ class Board(
 
         buildShadow()
 
-        //debug()
+        debug()
     }
 
     fun play(action: Action) {
@@ -73,7 +76,7 @@ class Board(
     fun buildShadow() {
         cells.forEach { it.spookyBy.forEach { it.value.clear() } }
 
-        (1..day.dayCountDown).forEach { nextDay ->
+        (1..day.countDown).forEach { nextDay ->
             cells
                 .filter { it.neighbors[day.oppositeSunDirectionIn(nextDay)] == null }
                 .forEach { borderCell ->
@@ -96,9 +99,7 @@ class Board(
     }
 
     private fun debug() {
-        cells.forEach {
-            Log.debug(it)
-        }
+        //Log.debug(day)
     }
 
 }
