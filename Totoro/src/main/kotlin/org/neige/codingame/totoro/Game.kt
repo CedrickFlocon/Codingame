@@ -52,7 +52,8 @@ class Game(
                 }.sum()
 
                 action.score = sunToScore((sunImpact + ((action.player.growCost[3]!! - Grow.BASE_COST[3]!!).toDouble() / 3)) * board.day.countDownPercentage) +
-                        sunToScore(action.player.potentialSun.toDouble() / 100) + (board.nutrientsMissing.toDouble() / 100)
+                        sunToScore((action.player.potentialSun.toDouble() + action.player.sunPoints) / 100) +
+                        (board.nutrientsMissing.toDouble() / 100)
             }
 
         actions.filterIsInstance(Grow::class.java)
