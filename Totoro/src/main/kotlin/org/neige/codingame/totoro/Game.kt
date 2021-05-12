@@ -52,8 +52,7 @@ class Game(
                 }.sum()
 
                 action.score = sunToScore((sunImpact + ((action.player.growCost[3]!! - Grow.BASE_COST[3]!!).toDouble() / 3)) * board.day.countDownPercentage) +
-                        (action.tree.cell.richness.toDouble() / 10) +
-                        sunToScore(action.player.potentialSun.toDouble() / 100)
+                        sunToScore(action.player.potentialSun.toDouble() / 100) + (board.nutrientsMissing.toDouble() / 100)
             }
 
         actions.filterIsInstance(Grow::class.java)
@@ -105,7 +104,7 @@ class Game(
             .firstOrNull()
             ?.takeIf { it.extraCost == 0 && it.player.potentialSun > 3 }
 
-        val action = (completeAction + growAction).filter { it.score >= -0.2 }.maxBy { it.score }
+        val action = (completeAction + growAction).filter { it.score > 0 }.maxBy { it.score }
             ?: seedTree ?: lastSeed
             ?: actions.first { it is Wait }
         return action
