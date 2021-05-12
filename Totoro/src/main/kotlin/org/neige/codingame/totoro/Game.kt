@@ -68,7 +68,7 @@ class Game(
                     ((treeSunDiff + opponentSunAvoid - playerSunAvoid).toDouble() / day.toDouble().pow(2)).also {
                         //Log.debug("($treeSunWithAction - $treeSunWithoutAction + $opponentSunAvoid - $playerSunAvoid) / ${day.toDouble().pow(2)} = $it")
                     }
-                }.sum()
+                }.sum() - action.extraCost / action.expectedTreeSize
                 //Log.debug(action)
             }
 
@@ -90,25 +90,17 @@ class Game(
         val growAction = actions.filterIsInstance(Grow::class.java).filter { board.day.dayCountDown > 2 - it.tree.size }
         val seedAction = actions.filterIsInstance(Seed::class.java).filter { board.day.dayCountDown > 4 }
 
-        val completeTree = completeAction
-            .groupBy { it.score }.maxBy { it.key }?.value
-            ?.sortedByDescending { it.tree.cell.richness }
-            ?.firstOrNull()
+        val completeTree = completeAction.maxBy { it.score }
             ?.takeIf {
                 when (board.day.day) {
                     in 0..15 -> me.growCost[Tree.MAX_SIZE]!! > 11
                     in 15..18 -> me.growCost[Tree.MAX_SIZE]!! > 9
                     in 18..20 -> me.growCost[Tree.MAX_SIZE]!! > 8
                     else -> true
-                } || (it.score > 0 && me.potentialSun > 8)
+                }
             }
 
-        val growTree = growAction
-            .groupBy { it.score }.maxBy { it.key }?.value
-            ?.groupBy { it.extraCost / (it.expectedTreeSize + 1) }?.minBy { it.key }?.value
-            ?.sortedByDescending { it.tree.cell.richness }
-            ?.firstOrNull()
-            ?.takeIf { board.day.day < 20 || completeTree == null }
+        val growTree = growAction.maxBy { it.score }
 
         val lastSeed = actions.filterIsInstance(Seed::class.java)
             .firstOrNull()
