@@ -14,6 +14,9 @@ data class Tree(
 
     lateinit var cell: Cell
 
+    val canBeGrown: Boolean
+        get() = size < MAX_SIZE
+
     val spookyBy: Map<Int, List<Tree>>
         get() = cell.spookyBy.map { it.key to it.value.filter { it.size >= size } }.toMap()
 

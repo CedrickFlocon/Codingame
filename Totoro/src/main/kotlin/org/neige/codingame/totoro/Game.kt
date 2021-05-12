@@ -63,7 +63,14 @@ class Game(
                             .mapNotNull { it.first.tree }
                             .filter { it.owner != action.player }
                             .filter { it.spookyBy[day]!!.isEmpty() && it.size <= action.expectedTreeSize }
-                            .sumBy { it.size }
+                            .map {
+                                if (!it.isDormant && it.canBeGrown && it.size == action.expectedTreeSize && opponent.sunPoints >= opponent.growCost[it.size + 1]!!) {
+                                    it.size.toDouble() / 2
+                                } else {
+                                    it.size.toDouble()
+                                }
+                            }
+                            .sum()
 
                         val playerSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.sunDirectionIn(day), action.expectedTreeSize)
                             .mapNotNull { it.first.tree }
