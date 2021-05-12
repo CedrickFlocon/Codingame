@@ -32,18 +32,29 @@ class Game(
     private fun buildScore(actions: List<Action>) {
         actions.filterIsInstance(Complete::class.java)
             .forEach { action ->
+                val player = if (action.player == me) me else opponent
+                val opponent = if (action.player != me) me else opponent
+
+                val opponentTree = board.trees.filter { it.owner != action.player }
+                val playerTree = board.trees.filter { it.owner == action.player }
+
                 val sunImpact = (1..board.day.countDown).map { day ->
-                    val playerSunPoint = board.trees.filter { it.owner == action.player }
+                    val playerSunPoint = playerTree
                         .filter { it.spookyBy[day]!!.size == 1 && it.spookyBy[day]!!.first() == action.tree }
                         .sumBy { it.size }
 
-                    val opponentSunPoint = board.trees.filter { it.owner != action.player }
+
+                    val opponentSunPoint = opponentTree
                         .filter { it.spookyBy[day]!!.size == 1 && it.spookyBy[day]!!.first() == action.tree }
                         .sumBy { it.size }
 
                     ((playerSunPoint - opponentSunPoint - action.tree.sunPoint[day]!!).toDouble() / day.toDouble().pow(2))
                 }.sum()
-                action.score = sunImpact * board.day.countDownPercentage
+
+                action.score = sunToScore(
+                    (sunImpact + ((action.player.growCost[3]!! - Grow.BASE_COST[3]!!).toDouble() / 3))
+                            * board.day.countDownPercentage
+                ) + action.tree.cell.richness.toDouble() / 10
             }
 
         actions.filterIsInstance(Grow::class.java)
@@ -65,7 +76,8 @@ class Game(
 
                     ((treeSunDiff + opponentSunAvoid - playerSunAvoid).toDouble() / day.toDouble().pow(2))
                 }.sum()
-                action.score = (sunImpact * board.day.countDownPercentage) - (action.extraCost.toDouble() / action.expectedTreeSize.toDouble())
+                action.score = sunToScore(((sunImpact) - (action.extraCost.toDouble() / action.expectedTreeSize.toDouble())) * board.day.countDownPercentage)
+
             }
 
         actions.filterIsInstance(Seed::class.java)
@@ -80,24 +92,28 @@ class Game(
     }
 
     private fun selectAction(actions: List<Action>): Action {
-        val completeAction = actions.filterIsInstance(Complete::class.java).filter { it.potentialScore > 0 }
+        val completeAction = actions.filterIsInstance(Complete::class.java).filter { it.potentialScore > 1 }
         val growAction = actions.filterIsInstance(Grow::class.java).filter { board.day.countDown > 2 - it.tree.size }
         val seedAction = actions.filterIsInstance(Seed::class.java).filter { board.day.countDown > 4 }
 
         val lastSeed = actions.filterIsInstance(Seed::class.java)
             .firstOrNull()
-            ?.takeIf { board.day.countDown == 0 && me.sunPoints % 3 >= it.sunCost }
+            ?.takeIf { board.day.countDown == 0 && it.player.sunPoints % 3 >= it.sunCost }
 
         val seedTree = seedAction
             .sortedByDescending { it.score }
             .filter { it.score >= 0.0 }
             .firstOrNull()
-            ?.takeIf { it.extraCost == 0 && me.potentialSun > 3 }
+            ?.takeIf { it.extraCost == 0 && it.player.potentialSun > 3 }
 
-        val action = (completeAction + growAction).maxBy { it.score }
+        val action = (completeAction + growAction).filter { it.score >= -0.2 }.maxBy { it.score }
             ?: seedTree ?: lastSeed
-            ?: Wait(me)
+            ?: actions.first { it is Wait }
         return action
+    }
+
+    private fun sunToScore(sun: Double): Double {
+        return sun / 3
     }
 
     private fun debug() {
@@ -106,8 +122,4 @@ class Game(
         with(board.trees.filter { it.owner == opponent }) { Log.debug("Op ${(0..Tree.MAX_SIZE).joinToString { size -> "$size:${this.count { it.size == size }}" }}") }
     }
 
-
-    private fun sunToScore(sun: Double): Double {
-        return sun / 3
-    }
 }

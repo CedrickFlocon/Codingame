@@ -23,6 +23,8 @@ class Board(
         private set
 
     var nutrients = 0
+    val nutrientsMissing :Int
+        get() = MAX_NUTRIENTS - nutrients
     val nutrientsPercentage: Double
         get() = nutrients.toDouble() / MAX_NUTRIENTS
 
