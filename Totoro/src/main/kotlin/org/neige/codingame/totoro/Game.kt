@@ -30,64 +30,67 @@ class Game(
     }
 
     private fun buildScore(actions: List<Action>) {
-        actions.filterIsInstance(Complete::class.java)
-            .forEach { action ->
-                val player = if (action.player == me) me else opponent
-                val opponent = if (action.player != me) me else opponent
+        actions.forEach { action ->
+            val player = if (action.player == me) me else opponent
+            val playerTree = board.trees.filter { it.owner == action.player }
 
-                val opponentTree = board.trees.filter { it.owner != action.player }
-                val playerTree = board.trees.filter { it.owner == action.player }
+            val opponent = if (action.player != me) me else opponent
+            val opponentTree = board.trees.filter { it.owner != action.player }
 
-                val sunImpact = (1..board.day.countDown).map { day ->
-                    val playerSunPoint = playerTree
-                        .filter { it.spookyBy[day]!!.size == 1 && it.spookyBy[day]!!.first() == action.tree }
-                        .sumBy { it.size }
+            action.score = when (action) {
+                is Complete -> {
+                    val sunImpact = (1..board.day.countDown).map { day ->
+                        val playerSunPoint = playerTree
+                            .filter { it.spookyBy[day]!!.size == 1 && it.spookyBy[day]!!.first() == action.tree }
+                            .sumBy { it.size }
 
 
-                    val opponentSunPoint = opponentTree
-                        .filter { it.spookyBy[day]!!.size == 1 && it.spookyBy[day]!!.first() == action.tree }
-                        .sumBy { it.size }
+                        val opponentSunPoint = opponentTree
+                            .filter { it.spookyBy[day]!!.size == 1 && it.spookyBy[day]!!.first() == action.tree }
+                            .sumBy { it.size }
 
-                    ((playerSunPoint - opponentSunPoint - action.tree.sunPoint[day]!!).toDouble() / day.toDouble().pow(2))
-                }.sum()
+                        ((playerSunPoint - opponentSunPoint - action.tree.sunPoint[day]!!).toDouble() / day.toDouble().pow(2))
+                    }.sum()
 
-                action.score = sunToScore((sunImpact + ((action.player.growCost[3]!! - Grow.BASE_COST[3]!!).toDouble() / 3)) * board.day.countDownPercentage) +
-                        sunToScore((action.player.potentialSun.toDouble() + action.player.sunPoints) / 100) +
-                        (board.nutrientsMissing.toDouble() / 100)
+                    sunToScore((sunImpact + ((action.player.growCost[3]!! - Grow.BASE_COST[3]!!).toDouble() / 3)) * board.day.countDownPercentage) +
+                            sunToScore((action.player.potentialSun.toDouble() + action.player.sunPoints) / 100) +
+                            (board.nutrientsMissing.toDouble() / 100)
+                }
+
+                is Grow -> {
+                    val sunImpact = (1..board.day.countDown).map { day ->
+                        val opponentSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.sunDirectionIn(day), action.tree.size + 1)
+                            .mapNotNull { it.first.tree }
+                            .filter { it.owner != action.player }
+                            .filter { it.spookyBy[day]!!.isEmpty() && it.size <= action.expectedTreeSize }
+                            .sumBy { it.size }
+
+                        val playerSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.sunDirectionIn(day), action.expectedTreeSize)
+                            .mapNotNull { it.first.tree }
+                            .filter { it.owner == action.player }
+                            .filter { it.spookyBy[day]!!.isEmpty() && it.size <= action.expectedTreeSize }
+                            .sumBy { it.size }
+
+                        val treeSunDiff = ((action.expectedTreeSize).takeIf { action.tree.spookySize[day] ?: 0 <= 0 } ?: 0) - action.tree.sunPoint[day]!!
+
+                        ((treeSunDiff + opponentSunAvoid - playerSunAvoid).toDouble() / day.toDouble().pow(2))
+                    }.sum()
+
+                    sunToScore(((sunImpact) - (action.extraCost.toDouble() / action.expectedTreeSize.toDouble())) * board.day.countDownPercentage)
+                }
+
+                is Seed -> {
+                    val treeNumber = (0 until Board.MAX_DIRECTION)
+                        .flatMap { board.getNeighborsInSunDirection(action.cell, it, Tree.MAX_SIZE) }
+                        .filter { it.first.tree?.owner == action.player }
+                        .count()
+
+                    (action.cell.richness - treeNumber.toDouble().pow(2.0))
+                }
+
+                is Wait -> 0.0
             }
-
-        actions.filterIsInstance(Grow::class.java)
-            .onEach { action ->
-                val sunImpact = (1..board.day.countDown).map { day ->
-                    val opponentSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.sunDirectionIn(day), action.tree.size + 1)
-                        .mapNotNull { it.first.tree }
-                        .filter { it.owner != action.player }
-                        .filter { it.spookyBy[day]!!.isEmpty() && it.size <= action.expectedTreeSize }
-                        .sumBy { it.size }
-
-                    val playerSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.sunDirectionIn(day), action.expectedTreeSize)
-                        .mapNotNull { it.first.tree }
-                        .filter { it.owner == action.player }
-                        .filter { it.spookyBy[day]!!.isEmpty() && it.size <= action.expectedTreeSize }
-                        .sumBy { it.size }
-
-                    val treeSunDiff = ((action.expectedTreeSize).takeIf { action.tree.spookySize[day] ?: 0 <= 0 } ?: 0) - action.tree.sunPoint[day]!!
-
-                    ((treeSunDiff + opponentSunAvoid - playerSunAvoid).toDouble() / day.toDouble().pow(2))
-                }.sum()
-                action.score = sunToScore(((sunImpact) - (action.extraCost.toDouble() / action.expectedTreeSize.toDouble())) * board.day.countDownPercentage)
-
-            }
-
-        actions.filterIsInstance(Seed::class.java)
-            .onEach { action ->
-                val treeNumber = (0 until Board.MAX_DIRECTION)
-                    .flatMap { board.getNeighborsInSunDirection(action.cell, it, Tree.MAX_SIZE) }
-                    .filter { it.first.tree?.owner == action.player }
-                    .count()
-
-                action.score = (action.cell.richness - treeNumber.toDouble().pow(2.0))
-            }
+        }
     }
 
     private fun selectAction(actions: List<Action>): Action {
