@@ -37,9 +37,9 @@ class Game(
             val opponent = if (action.player != me) me else opponent
             val opponentTree = board.trees.filter { it.owner != action.player }
 
-            action.score = when (action) {
+            when (action) {
                 is Complete -> {
-                    val sunImpact = (1..board.day.countDown).map { day ->
+                    action.sunImpact = (1..board.day.countDown).map { day ->
                         val playerSunPoint = playerTree
                             .filter { it.spookyBy[day]!!.size == 1 && it.spookyBy[day]!!.first() == action.tree }
                             .sumBy { it.size }
@@ -52,13 +52,13 @@ class Game(
                         ((playerSunPoint - opponentSunPoint - action.tree.sunPoint[day]!!).toDouble() / day.toDouble().pow(2))
                     }.sum()
 
-                    sunToScore((sunImpact + ((action.player.growCost[3]!! - Grow.BASE_COST[3]!!).toDouble() / 3)) * board.day.countDownPercentage) +
+                    action.score = sunToScore((action.sunImpact + ((action.player.growCost[3]!! - Grow.BASE_COST[3]!!).toDouble() / 3)) * board.day.countDownPercentage) +
                             sunToScore((action.player.potentialSun.toDouble() + action.player.sunPoints) / 100) +
                             (board.nutrientsMissing.toDouble() / 100)
                 }
 
                 is Grow -> {
-                    val sunImpact = (1..board.day.countDown).map { day ->
+                    action.sunImpact = (1..board.day.countDown).map { day ->
                         val opponentSunAvoid = board.getNeighborsInSunDirection(action.tree.cell, board.day.sunDirectionIn(day), action.tree.size + 1)
                             .mapNotNull { it.first.tree }
                             .filter { it.owner != action.player }
@@ -83,7 +83,7 @@ class Game(
                         ((treeSunDiff + opponentSunAvoid - playerSunAvoid).toDouble() / day.toDouble().pow(2))
                     }.sum()
 
-                    sunToScore(((sunImpact) - (action.extraCost.toDouble() / action.expectedTreeSize.toDouble())) * board.day.countDownPercentage)
+                    action.score = sunToScore(((action.sunImpact) - (action.extraCost.toDouble() / action.expectedTreeSize.toDouble())) * board.day.countDownPercentage)
                 }
 
                 is Seed -> {
@@ -92,10 +92,10 @@ class Game(
                         .filter { it.first.tree?.owner == action.player }
                         .count()
 
-                    (action.cell.richness - treeNumber.toDouble().pow(2.0))
+                    action.score = (action.cell.richness - treeNumber.toDouble().pow(2.0))
                 }
 
-                is Wait -> 0.0
+                is Wait -> action.score = 0.0
             }
         }
     }

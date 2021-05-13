@@ -5,8 +5,7 @@ import kotlin.math.roundToInt
 
 sealed class Action(
     val player: Player,
-    val sunCost: Int,
-    var score: Double = 0.0
+    val sunCost: Int
 ) {
 
     companion object {
@@ -49,6 +48,7 @@ sealed class Action(
     }
 
     open val extraCost: Int = 0
+    open var score: Double = 0.0
 
     protected abstract fun command(): String
 
@@ -80,13 +80,15 @@ class Complete(
     val potentialScore: Int
         get() = tree.nutrients + tree.cell.richnessScore
 
+    var sunImpact = 0.0
+
     override fun command(): String {
         return "COMPLETE ${tree.cellId}"
     }
 
     override fun toString(): String {
         return """
-            ${command()} Score=${score.round(2)}
+            ${command()} Score=${score.round(2)} SunImpact=${sunImpact.round(2)}
         """.trimIndent()
     }
 
@@ -132,13 +134,15 @@ class Grow(
     override val extraCost: Int
         get() = sunCost - BASE_COST[expectedTreeSize]!!
 
+    var sunImpact = 0.0
+
     override fun command(): String {
         return "GROW ${tree.cellId}"
     }
 
     override fun toString(): String {
         return """
-         ${command()} Cost=$sunCost ExtraCost=$extraCost Score=${score.round(2)}
+         ${command()} Cost=$sunCost ExtraCost=$extraCost Score=${score.round(2)} SunImpact=${sunImpact.round(2)}
         """.trimIndent()
     }
 }
