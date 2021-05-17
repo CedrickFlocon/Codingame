@@ -1,45 +1,15 @@
-buildscript {
-    ext.junit = '1.0.1'
-    ext.spec = '1.1.5'
-
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath "org.junit.platform:junit-platform-gradle-plugin:$junit"
-    }
-}
-
 plugins {
     id 'org.jetbrains.kotlin.jvm'
 }
-
-apply plugin: 'org.junit.platform.gradle.plugin'
 
 sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
-    jcenter()
-    maven { url "http://dl.bintray.com/jetbrains/spek" }
 }
 
 dependencies {
     implementation(project(':Util'))
 
     compile "org.jetbrains.kotlin:kotlin-stdlib"
-
-    testRuntime "org.junit.platform:junit-platform-launcher:$junit"
-    testCompile "org.jetbrains.spek:spek-api:$spec"
-    testRuntime "org.jetbrains.spek:spek-junit-platform-engine:$spec"
-    testCompile "org.assertj:assertj-core:3.14.0"
-    testCompile "org.mockito:mockito-core:3.2.4"
-}
-
-junitPlatform {
-    filters {
-        engines {
-            include 'spek'
-        }
-    }
 }
