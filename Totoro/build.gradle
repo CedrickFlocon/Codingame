@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+jar {
+    manifest { attributes 'Main-Class': 'org.neige.codingame.totoro.MainKt' }
+    from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    archiveBaseName = "totoro"
+    archiveVersion = new Date().format('yyyy-MM-dd-HH-mm')
+    destinationDirectory = file("$buildDir/jar/")
+}
+
+test {
+    useJUnitPlatform {
+        includeEngines 'spek2'
+    }
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib"
+
+    implementation project(':Util')
+}
