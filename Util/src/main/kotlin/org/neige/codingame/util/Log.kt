@@ -1,5 +1,6 @@
 package org.neige.codingame.util
 
+//todo log level
 object Log {
 
     var loggable = true
