@@ -1,37 +1,48 @@
 package org.neige.codingame.totoro
 
+import org.neige.codingame.totoro.state.Board
+import org.neige.codingame.totoro.state.Cell
+import org.neige.codingame.totoro.state.Day
+import org.neige.codingame.totoro.state.Player
+import org.neige.codingame.totoro.state.State
+import org.neige.codingame.totoro.state.Tree
 import java.util.Scanner
 
 fun main() {
     val input = Scanner(System.`in`)
 
-    val board = Board(
-        (0 until input.nextInt()).map {
-            Cell(
-                input.nextInt(),
-                input.nextInt(),
-                listOf(
-                    input.nextInt().takeIf { it != -1 },
-                    input.nextInt().takeIf { it != -1 },
-                    input.nextInt().takeIf { it != -1 },
-                    input.nextInt().takeIf { it != -1 },
-                    input.nextInt().takeIf { it != -1 },
-                    input.nextInt().takeIf { it != -1 }
+    val cells = (0 until input.nextInt()).map {
+        it to
+                Cell(
+                    input.nextInt(),
+                    input.nextInt(),
+                    listOf(
+                        input.nextInt().takeIf { it != -1 },
+                        input.nextInt().takeIf { it != -1 },
+                        input.nextInt().takeIf { it != -1 },
+                        input.nextInt().takeIf { it != -1 },
+                        input.nextInt().takeIf { it != -1 },
+                        input.nextInt().takeIf { it != -1 }
+                    )
                 )
-            )
-        }
-    )
+    }.toMap()
 
-    val game = Game(board, Player(board), Player(board))
+    val board = Board(cells)
+
+    val game = Game()
 
     while (true) {
         val day = input.nextInt() // the game lasts 24 days: 0-23
-        board.nutrients = input.nextInt() // the base score you gain from the next COMPLETE action
-        game.me.sunPoints = input.nextInt() // your sun points
-        game.me.score = input.nextInt() // your current score
-        game.opponent.sunPoints = input.nextInt() // opponent's sun points
-        game.opponent.score = input.nextInt() // opponent's score
-        game.opponent.isWaiting = input.nextInt() != 0 // whether your opponent is asleep until the next day
+        val nutrients = input.nextInt() // the base score you gain from the next COMPLETE action
+
+        val meSunPoints = input.nextInt() // your sun points
+        val meScore = input.nextInt() // your current score
+        val opponentSunPoints = input.nextInt() // opponent's sun points
+        val opponentScore = input.nextInt() // opponent's score
+        val opponentIsWaiting = input.nextInt() != 0 // whether your opponent is asleep until the next day
+
+        val red = Player(Player.Who.RED, meSunPoints, meScore, false)
+        val blue = Player(Player.Who.BLUE, opponentSunPoints, opponentScore, opponentIsWaiting)
 
         val trees = (0 until input.nextInt()).map {
             val cellIndex = input.nextInt() // location of this tree
@@ -39,20 +50,18 @@ fun main() {
             val isMine = input.nextInt() != 0 // 1 if this is your tree
             val isDormant = input.nextInt() != 0 // 1 if this tree is dormant
 
-            Tree(cellIndex, size, if (isMine) game.me else game.opponent, isDormant, board.nutrients)
+            Tree(cells[cellIndex]!!, size, if (isMine) red else blue, isDormant)
         }
 
-        game.numberOfPossibleMoves = input.nextInt()
+        val numberOfPossibleMoves = input.nextInt()
         if (input.hasNextLine()) {
             input.nextLine()
         }
 
-        for (i in 0 until game.numberOfPossibleMoves) {
+        for (i in 0 until numberOfPossibleMoves) {
             val possibleMove = input.nextLine()
         }
 
-        game.board.nextTurn(trees, day)
-
-        game.play()
+        game.newState(State(board, trees, nutrients, Day(day), red, blue, null))
     }
 }

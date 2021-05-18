@@ -1,7 +1,8 @@
 package org.neige.codingame.totoro
 
-import org.neige.codingame.util.Log
-import kotlin.math.roundToInt
+import org.neige.codingame.totoro.state.Cell
+import org.neige.codingame.totoro.state.Player
+import org.neige.codingame.totoro.state.Tree
 
 sealed class Action(
     val player: Player,
@@ -42,19 +43,19 @@ sealed class Action(
         )
     }
 
+    open val extraCost = 0
+
     fun play(message: String? = null) {
-        Log.debug("MyAction $this")
         println("${command()} ${message ?: QUOTE.random()}")
     }
-
-    open val extraCost: Int = 0
-    open var score: Double = 0.0
 
     protected abstract fun command(): String
 
 }
 
-class Wait(player: Player) : Action(player, 0) {
+class Wait(
+    player: Player
+) : Action(player, 0) {
 
     override fun command(): String {
         return "WAIT"
@@ -77,39 +78,13 @@ class Complete(
         const val COMPLETE_COST = 4
     }
 
-    val potentialScore: Int
-        get() = tree.nutrients + tree.cell.richnessScore
-
-    var sunImpact = 0.0
-
     override fun command(): String {
-        return "COMPLETE ${tree.cellId}"
+        return "COMPLETE ${tree.cell.id}"
     }
 
     override fun toString(): String {
         return """
-            ${command()} Score=${score.round(2)} SunImpact=${sunImpact.round(2)}
-        """.trimIndent()
-    }
-
-}
-
-class Seed(
-    player: Player,
-    val tree: Tree,
-    val cell: Cell
-) : Action(player, player.growCost[0]!!) {
-
-    override val extraCost: Int
-        get() = sunCost
-
-    override fun command(): String {
-        return "SEED ${tree.cellId} ${cell.id}"
-    }
-
-    override fun toString(): String {
-        return """
-            ${command()} Cost=$sunCost ExtraCost=$extraCost Score=${score.round(2)}
+            ${command()}
         """.trimIndent()
     }
 
@@ -117,8 +92,9 @@ class Seed(
 
 class Grow(
     player: Player,
+    sunCost: Int,
     val tree: Tree
-) : Action(player, player.growCost[tree.size + 1]!!) {
+) : Action(player, sunCost) {
 
     companion object {
         val BASE_COST = mapOf(
@@ -128,27 +104,39 @@ class Grow(
         )
     }
 
-    val expectedTreeSize: Int
-        get() = tree.size + 1
-
     override val extraCost: Int
-        get() = sunCost - BASE_COST[expectedTreeSize]!!
-
-    var sunImpact = 0.0
+        get() = super.sunCost - BASE_COST[tree.size + 1]!!
 
     override fun command(): String {
-        return "GROW ${tree.cellId}"
+        return "GROW ${tree.cell.id}"
     }
 
     override fun toString(): String {
         return """
-         ${command()} Cost=$sunCost ExtraCost=$extraCost Score=${score.round(2)} SunImpact=${sunImpact.round(2)}
+         ${command()} Cost=$sunCost
         """.trimIndent()
     }
 }
 
-fun Double.round(decimals: Int): Double {
-    var multiplier = 1.0
-    repeat(decimals) { multiplier *= 10 }
-    return (this * multiplier).roundToInt() / multiplier
+class Seed(
+    player: Player,
+    sunCost: Int,
+    val tree: Tree,
+    val cell: Cell,
+    val distance: Int
+) : Action(player, sunCost) {
+
+    override val extraCost: Int
+        get() = super.sunCost
+
+    override fun command(): String {
+        return "SEED ${tree.cell.id} ${cell.id}"
+    }
+
+    override fun toString(): String {
+        return """
+            ${command()} Cost=$sunCost Distance=$distance
+        """.trimIndent()
+    }
+
 }
