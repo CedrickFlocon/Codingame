@@ -11,5 +11,5 @@ repositories {
 dependencies {
     implementation(project(':Util'))
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
 }

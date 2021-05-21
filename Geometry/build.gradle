@@ -9,12 +9,12 @@ repositories {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
 
-    testRuntime "org.spekframework.spek2:spek-runner-junit5:2.0.9"
-    testCompile "org.spekframework.spek2:spek-dsl-jvm:2.0.9"
-    testCompile "org.assertj:assertj-core:3.14.0"
-    testCompile "org.mockito:mockito-core:3.2.4"
+    testImplementation "org.spekframework.spek2:spek-runner-junit5:2.0.9"
+    testImplementation "org.spekframework.spek2:spek-dsl-jvm:2.0.9"
+    testImplementation "org.assertj:assertj-core:3.14.0"
+    testImplementation "org.mockito:mockito-core:3.2.4"
 }
 
 test {

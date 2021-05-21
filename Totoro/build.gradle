@@ -11,7 +11,7 @@ repositories {
 
 jar {
     manifest { attributes 'Main-Class': 'org.neige.codingame.totoro.MainKt' }
-    from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    from { configurations.implementationClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     archiveBaseName = "totoro"
     archiveVersion = new Date().format('yyyy-MM-dd-HH-mm')
     destinationDirectory = file("$buildDir/jar/")
@@ -24,7 +24,7 @@ test {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
 
     implementation project(':Util')
 }

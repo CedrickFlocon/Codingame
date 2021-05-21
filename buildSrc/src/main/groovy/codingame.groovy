@@ -22,7 +22,7 @@ class Codingame extends DefaultTask {
         def importLine = new ArrayList()
         def codeLine = new ArrayList()
 
-        def internalProjects = project.configurations.find { it.name == "-runtime" }.dependencies.findAll { it instanceof DefaultProjectDependency }.stream().map { it.dependencyProject }.collect()
+        def internalProjects = project.configurations.find { it.name == "implementation" }.dependencies.findAll { it instanceof DefaultProjectDependency }.stream().map { it.dependencyProject }.collect()
 
         [project, *internalProjects].each {
             println(it)
