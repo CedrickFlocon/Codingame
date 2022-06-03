@@ -9,6 +9,10 @@ data class Coordinate(val x: Int, val y: Int) {
         return Coordinate(x + vector.x, y + vector.y)
     }
 
+    operator fun minus(vector: Vector): Coordinate {
+        return Coordinate(x - vector.x, y - vector.y)
+    }
+
     fun distanceFrom(coordinate: Coordinate): Double {
         return sqrt((coordinate.y - y).toDouble().pow(2.0) + (coordinate.x - x).toDouble().pow(2.0))
     }
