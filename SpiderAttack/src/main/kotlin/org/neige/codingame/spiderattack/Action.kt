@@ -1,7 +1,6 @@
 package org.neige.codingame.spiderattack
 
 import org.neige.codingame.geometry.Coordinate
-import org.neige.codingame.geometry.Vector
 
 sealed interface Action {
 
@@ -24,16 +23,42 @@ sealed interface Action {
             get() = 0
     }
 
-    class Wind(private val vector: Vector) : Action {
+    sealed interface Spell : Action {
         companion object {
             const val COST = 10
-            const val RANGE = 1280
         }
-
-        override fun command() = "SPELL WIND ${vector.x} ${vector.y}"
 
         override val manaCost: Int
             get() = COST
+
+        class Wind(private val coordinate: Coordinate) : Spell {
+            companion object {
+                const val RANGE = 1280
+                const val MOVE = 2200
+            }
+
+            override fun command() = "SPELL WIND ${coordinate.x} ${coordinate.y}"
+        }
+
+        class Shield(private val entity: Entity) : Spell {
+            companion object {
+                const val RANGE = 2200
+            }
+
+            override fun command() = "SPELL SHIELD ${entity.id}"
+        }
+
+        class Control(
+            private val entity: Entity,
+            private val coordinate: Coordinate
+        ) : Spell {
+            companion object {
+                const val RANGE = 2200
+            }
+
+            override fun command() = "SPELL CONTROL ${entity.id} ${coordinate.x} ${coordinate.y}"
+        }
+
     }
 
 }

@@ -4,13 +4,16 @@ import org.neige.codingame.geometry.Coordinate
 import org.neige.codingame.geometry.Vector
 
 class Hero(
-    val id: Int,
-    val coordinate: Coordinate,
+    override val id: Int,
+    override val coordinate: Coordinate,
     val owner: Player,
-) {
+) : Entity {
 
     companion object {
         const val VISIBILITY = 2200
+        const val SPEED = 800
+        const val ATTACK_RANGE = 800
+        const val ATTACK = 2
     }
 
     val role: Role
@@ -32,8 +35,8 @@ class Hero(
                 val v = Vector(2500 * Board.BOARD_WIDTH / Board.BOARD_HEIGHT, 2500)
                 if (it.x == 0) it + v else it - v
             }
-            Role.ATTACKER -> Board.playerBase(owner).coordinate.let {
-                val v = Vector(2500, 2500)
+            Role.ATTACKER -> Board.opponentBase(owner).coordinate.let {
+                val v = Vector((Spider.TARGET_RANGE + Action.Spell.Wind.RANGE) / 2, (Spider.TARGET_RANGE + Action.Spell.Wind.RANGE) / 2)
                 if (it.x == 0) it + v else it - v
             }
         }
@@ -48,7 +51,7 @@ class Hero(
         return when (role) {
             Role.DEFENDER -> defend()
             Role.MIDDLE -> defend()
-            Role.ATTACKER -> defend()
+            Role.ATTACKER -> attacker()
         }
     }
 
@@ -56,8 +59,8 @@ class Hero(
         val threadMe = spiders
             .filter { it.threatFor == Player.ME }
 
-        if (Board.playerBase(owner).mana > Action.Wind.COST && threadMe.count { it.coordinate.distanceFrom(coordinate) <= Action.Wind.RANGE } >= 2) {
-            return Action.Wind(Vector(coordinate, Board.opponentBase(Player.ME).coordinate))
+        if (Board.playerBase(owner).mana > Action.Spell.COST && threadMe.count { it.coordinate.distanceFrom(coordinate) <= Action.Spell.Wind.RANGE } >= 2) {
+            return Action.Spell.Wind(Board.opponentBase(Player.ME).coordinate)
         }
 
         return spiders
@@ -73,6 +76,10 @@ class Hero(
     }
 
     private fun attacker(): Action {
+        if (Board.playerBase(owner).mana > Action.Spell.COST && spiders.count { it.coordinate.distanceFrom(coordinate) <= Action.Spell.Wind.RANGE } >= 1) {
+            return Action.Spell.Wind(Board.opponentBase(Player.ME).coordinate)
+        }
+
         return Action.Move(bestPosition)
     }
 

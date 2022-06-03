@@ -7,16 +7,12 @@ import java.util.Scanner
 class Game(input: Scanner) {
 
     init {
-        Board.myBase = Base(
-            Coordinate(input.nextInt(), input.nextInt()), // The corner of the map representing your base
-            Player.ME
+        Board.init(
+            Base(
+                Coordinate(input.nextInt(), input.nextInt()), // The corner of the map representing your base
+                Player.ME
+            )
         )
-
-        Board.opponentBase = Base(
-            if (Board.myBase.coordinate.x == 0) Coordinate(17630, 9000) else Coordinate(0, 0),
-            Player.OPPONENT
-        )
-
         val heroesPerPlayer = input.nextInt() // Always 3
 
         // game loop
@@ -25,11 +21,16 @@ class Game(input: Scanner) {
             val myHero = mutableListOf<Hero>()
             val opponentHero = mutableListOf<Hero>()
 
-            Board.myBase.health = input.nextInt()
-            Board.myBase.mana = input.nextInt()
 
-            Board.opponentBase.health = input.nextInt()
-            Board.opponentBase.mana = input.nextInt()
+            Board.playerBase(Player.ME).apply {
+                health = input.nextInt()
+                mana = input.nextInt()
+            }
+
+            Board.playerBase(Player.OPPONENT).apply {
+                health = input.nextInt()
+                mana = input.nextInt()
+            }
 
             val entityCount = input.nextInt() // Amount of heros and monsters you can see
             for (i in 0 until entityCount) {
@@ -69,7 +70,7 @@ class Game(input: Scanner) {
             }
 
             myHero.forEach {
-                Board.myBase.play(it.action())
+                Board.playerBase(Player.ME).play(it.action())
             }
         }
     }

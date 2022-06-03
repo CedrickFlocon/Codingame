@@ -5,8 +5,6 @@ import kotlin.math.sqrt
 
 data class Vector(val x: Int, val y: Int) {
 
-    constructor(a: Coordinate, b: Coordinate) : this(b.x - a.x, b.y - a.y)
-
     operator fun unaryMinus(): Vector {
         return Vector(-x, -y)
     }
