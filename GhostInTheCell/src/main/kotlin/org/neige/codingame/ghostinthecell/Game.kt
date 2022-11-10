@@ -92,7 +92,7 @@ class Game(private val input: Scanner, private val factories: Array<Factory>) {
                     .forEach { enemyFactory ->
                         enemyFactory.links
                                 .filter { it.to.diplomacy == Diplomacy.ALLY }
-                                .minBy { it.distance }?.let {
+                                .minByOrNull { it.distance }?.let {
                                     actions.add(it.to.bombFactory(enemyFactory))
                                 }
                     }

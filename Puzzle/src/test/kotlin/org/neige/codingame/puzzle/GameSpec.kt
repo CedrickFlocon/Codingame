@@ -1,13 +1,11 @@
 package org.neige.codingame.puzzle
 
-import org.assertj.core.api.Assertions.assertThat
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
-import org.spekframework.spek2.style.specification.xdescribe
+import com.google.common.truth.Truth.assertThat
+import io.kotest.core.spec.style.DescribeSpec
 import java.util.*
 
 
-object GameSpec : Spek({
+class GameSpec : DescribeSpec({
 
     xdescribe("First game start") {
         val game = Game(Scanner(this::class.java.classLoader.getResourceAsStream("input_game_1.txt")))

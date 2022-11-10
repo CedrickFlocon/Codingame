@@ -1,5 +1,5 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm'
+    id("kotlin")
 }
 
 sourceCompatibility = 1.8
@@ -8,10 +8,8 @@ repositories {
     mavenCentral()
 }
 
-test {
-    useJUnitPlatform {
-        includeEngines 'spek2'
-    }
+tasks.test.useJUnitPlatform {
+    includeEngines 'spek2'
 }
 
 dependencies {

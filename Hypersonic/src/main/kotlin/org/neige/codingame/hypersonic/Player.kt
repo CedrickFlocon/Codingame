@@ -11,15 +11,15 @@ data class Player(override val id: Int, override val x: Int, override val y: Int
         scores.forEach { Log.debug(it.toString()) }
 
         val safestPlace = scores.sortedByDescending { it.timerToExplode ?: 10 }.firstOrNull { it.isSafePath && !it.isDeadEnd }
-                ?: scores.filter { !it.isSafePath && !it.isDeadEnd }.maxBy { it.timerToExplode ?: 10 }
-                ?: scores.maxBy { it.timerToExplode ?: 10 }!!
+                ?: scores.filter { !it.isSafePath && !it.isDeadEnd }.maxByOrNull { it.timerToExplode ?: 10 }
+                ?: scores.maxByOrNull { it.timerToExplode ?: 10 }!!
 
         return if (scores.none { it.destroyableBoxNumber > 0 }) {
             Action(Action.Command.MOVE, safestPlace, "I will kill you")
         } else {
             val bestScore = scores
                     .filter { it.isSafePath && !it.isSuicide && !it.isDeadEnd && board.getGridElement(it.located) !is Bomb }
-                    .maxBy { it.score() }
+                    .maxByOrNull { it.score() }
 
             Log.debug("Best score $bestScore")
 

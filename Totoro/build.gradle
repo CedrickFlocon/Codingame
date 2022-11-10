@@ -9,18 +9,8 @@ repositories {
     mavenCentral()
 }
 
-jar {
-    manifest { attributes 'Main-Class': 'org.neige.codingame.totoro.MainKt' }
-    from { configurations.implementationClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
-    archiveBaseName = "totoro"
-    archiveVersion = new Date().format('yyyy-MM-dd-HH-mm')
-    destinationDirectory = file("$buildDir/jar/")
-}
-
-test {
-    useJUnitPlatform {
-        includeEngines 'spek2'
-    }
+tasks.test.useJUnitPlatform {
+    includeEngines 'spek2'
 }
 
 dependencies {
