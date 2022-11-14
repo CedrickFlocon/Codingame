@@ -9,7 +9,7 @@ class Hunter(game: Game, coordinate: Coordinate, speed: Scalar, angle: Int, next
         return if (game.opponents.any({ willCollide(it) && (speed - it.speed).magnitude() > 200 })) {
             shield(nextCheckpoint)
         } else {
-            val opponent = game.opponents.max()!!
+            val opponent = game.opponents.maxOrNull()!!
             if (opponent.coordinate.distanceFrom(opponent.nextCheckpoint.coordinate) < coordinate.distanceFrom(opponent.nextCheckpoint.coordinate)) {
                 val opponentCheckpoint = game.nextCheckpoint(opponent.nextCheckpoint)
                 when {
