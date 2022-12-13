@@ -4,28 +4,36 @@ import java.util.Scanner
 
 fun main(args: Array<String>) {
     val input = Scanner(System.`in`)
-    val width = input.nextInt()
-    val height = input.nextInt()
+    val board = Board(input.nextInt(), input.nextInt())
+    val me = Player(board)
+    val opponent = Player(board)
 
-    // game loop
     while (true) {
-        val myMatter = input.nextInt()
-        val oppMatter = input.nextInt()
-        for (i in 0 until height) {
-            for (j in 0 until width) {
-                val scrapAmount = input.nextInt()
-                val owner = input.nextInt() // 1 = me, 0 = foe, -1 = neutral
-                val units = input.nextInt()
-                val recycler = input.nextInt()
-                val canBuild = input.nextInt()
-                val canSpawn = input.nextInt()
-                val inRangeOfRecycler = input.nextInt()
+        me.matter = input.nextInt()
+        opponent.matter = input.nextInt()
+
+        val actions = mutableListOf<String>()
+        for (y in 0 until board.height) {
+            for (x in 0 until board.width) {
+                val tile = board.grid[x][y]
+                tile.scrapAmount = input.nextInt()
+                tile.owner = input.nextInt().let {
+                    when (it) {
+                        1 -> Owner.ME
+                        0 -> Owner.OPPONENT
+                        else -> null
+                    }
+                }
+                tile.units = input.nextInt()
+                tile.recycler = input.nextInt() == 1
+                tile.canBuild = input.nextInt() == 1
+                tile.canSpawn = input.nextInt() == 1
+                tile.inRangeOfRecycler = input.nextInt() == 1
             }
         }
 
-        // Write an action using println()
-        // To debug: System.err.println("Debug messages...");
+        board.compute()
 
-        println("WAIT")
+        me.play()
     }
 }
