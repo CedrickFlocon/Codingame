@@ -7,6 +7,10 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    implementation(lib.kotlin.stdlib)
     implementation(project(":Geometry"))
+
+    testImplementation(test.kotest)
+    testImplementation(test.mockk)
+    testImplementation(test.truth)
 }

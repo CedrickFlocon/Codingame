@@ -6,68 +6,101 @@ import kotlin.math.min
 class Board(
     val width: Int,
     val height: Int,
-) {
+) : Resettable, Computable, Debuggable {
 
+    //Input
     val grid = Array(width) { x -> Array(height) { y -> Tile(x, y) } }
     val tiles = grid.flatten()
-    val zones = mutableListOf<Zone>()
 
-    private fun Tile.inRange(): List<Tile> {
-        return listOfNotNull(
-            grid.getOrNull(x - 1)?.get(y),
-            grid.getOrNull(x + 1)?.get(y),
-            grid[x].getOrNull(y - 1),
-            grid[x].getOrNull(y + 1)
-        )
+    //Compute
+    val zones = mutableListOf<Zone>()
+    val fields = mutableListOf<List<Zone>>()
+    var scrapAmount = 0
+    var maxTile = 0
+
+    override fun reset() {
+        zones.clear()
+        fields.clear()
+        scrapAmount = 0
+        maxTile = 0
     }
 
     fun tilesInRange(tile: Tile): List<Tile> {
-        return tile.inRange()
+        return listOfNotNull(
+            grid.getOrNull(tile.x - 1)?.get(tile.y),
+            grid.getOrNull(tile.x + 1)?.get(tile.y),
+            grid[tile.x].getOrNull(tile.y - 1),
+            grid[tile.x].getOrNull(tile.y + 1)
+        ).filter { !it.grass }
     }
 
-    private fun Tile.field(): List<Tile> {
-        val tiles = mutableListOf<Tile>()
-        val toInspect = Stack<Tile>()
-        toInspect.push(this)
-
-        while (toInspect.isNotEmpty()) {
-            val tileToInspect = toInspect.pop()
-            tiles.add(tileToInspect)
-
-            tileToInspect.inRange()
-                .filter { tile -> tile.scrapAmount > 0 && !tile.recycler && tiles.none { it.x == tile.x && it.y == tile.y } }
-                .forEach { toInspect.push(it) }
-        }
-
-        return tiles
-    }
-
-    fun compute() {
-        tiles.forEach { origin ->
-            origin.recyclingPotential = origin.scrapAmount + origin.inRange().sumOf { min(origin.scrapAmount, it.scrapAmount) }
-        }
-
-        zones.clear()
-        tiles
+    override fun compute() {
+        val zonesAndLinks = tiles
             .asSequence()
-            .filter { it.scrapAmount > 0 }
+            .filter { it.free }
             .filter { tiles -> zones.none { it.tiles.any { it == tiles } } }
-            .forEach { origin ->
-                val tiles = origin.field()
-                zones.add(
-                    Zone(
-                        tiles = tiles,
-                        scrapAmount = tiles.sumOf { it.scrapAmount },
-                        neutralTile = tiles.count { it.owner == null },
-                        myTile = tiles.count { it.owner == Owner.ME },
-                        myUnit = tiles.filter { it.owner == Owner.ME }.sumOf { it.units },
-                        myRecycler = tiles.filter { it.owner == Owner.ME }.count { it.recycler },
-                        opponentTile = tiles.count { it.owner == Owner.OPPONENT },
-                        opponentUnit = tiles.filter { it.owner == Owner.OPPONENT }.sumOf { it.units },
-                        opponentRecycler = tiles.filter { it.owner == Owner.OPPONENT }.count { it.recycler },
-                    )
-                )
+            .map { origin ->
+                val tiles = mutableSetOf<Tile>()
+                val borderTiles = mutableSetOf<Link>()
+                var scrapAmount = 0
+                var tilesNumber = 0
+                var robotNumber = 0
+
+                val toInspect = Stack<Tile>().apply { this.push(origin) }
+
+                while (toInspect.isNotEmpty()) {
+                    val tileToInspect = toInspect.pop()
+                    val inRange = tilesInRange(tileToInspect)
+
+                    scrapAmount += tileToInspect.scrapAmount
+                    tilesNumber++
+                    robotNumber += tileToInspect.robot
+                    tileToInspect.recyclingPotential = tileToInspect.scrapAmount + inRange.sumOf { min(tileToInspect.scrapAmount, it.scrapAmount) }
+                    tiles.add(tileToInspect)
+
+                    inRange
+                        .onEach {
+                            if (it.recycler && it.scrapAmount >= tileToInspect.scrapAmount) {
+                                tileToInspect.willBecomeGrass = true
+                            }
+                        }
+                        .filter { tileInRange -> tileInRange.free && !tiles.contains(tileInRange) && !toInspect.contains(tileInRange) }
+                        .forEach { tileInRange ->
+                            if (tileInRange.owner == origin.owner) {
+                                toInspect.push(tileInRange)
+                            } else {
+                                borderTiles.add(Link(tileToInspect, tileInRange))
+                            }
+                        }
+                }
+                (Zone(
+                    tiles = tiles,
+                    tileNumber = tilesNumber,
+                    scrapAmount = scrapAmount,
+                    player = origin.owner,
+                    robot = robotNumber,
+                )).also { zones.add(it) } to borderTiles
             }
+            .toList()
+
+        zonesAndLinks
+            .forEach { (zone, borders) ->
+                zone.borders = borders
+                    .map { link -> zonesAndLinks.first { it.first.tiles.any { it == link.outside } }.first to link }
+                    .groupBy { it.first }
+                    .mapValues {
+                        it.value.map { it.second }
+                    }
+            }
+
+        fields.addAll(zones.map { it.fieldZone }.distinct().toMutableList())
+
+        maxTile = tiles.count { !it.willBecomeGrass }
     }
+
+    override fun debug() = """
+        |Board ($maxTile) 
+        |${zones.joinToString("\n") { "=>${it.debug()}" }}
+        """.trimMargin()
 
 }

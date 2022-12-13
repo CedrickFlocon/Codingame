@@ -1,6 +1,7 @@
 package org.neige.codingame.keepofthegrass
 
-enum class Owner {
-    ME,
-    OPPONENT,
+interface Resettable {
+
+    fun reset()
+
 }

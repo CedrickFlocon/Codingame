@@ -1,25 +1,38 @@
 package org.neige.codingame.keepofthegrass
 
-object Action {
+sealed interface Action {
 
-    fun build(tile: Tile): String {
-        return "BUILD ${tile.x} ${tile.y}"
+    val cost: Int
+    fun command(): String
+
+    class Build(val tile: Tile) : Action {
+        override val cost: Int = 10
+
+        override fun command() = "BUILD ${tile.x} ${tile.y}"
     }
 
-    fun move(number: Int, from: Tile, to: Tile): String {
-        return "MOVE $number ${from.x} ${from.y} ${to.x} ${to.y}"
+    class Spawn(val number: Int, val tile: Tile) : Action {
+        override val cost: Int = 10
+
+        override fun command() = "SPAWN $number ${tile.x} ${tile.y}"
     }
 
-    fun spawn(number: Int, tile: Tile): String {
-        return "SPAWN $number ${tile.x} ${tile.y}"
+    class Move(val number: Int, val from: Tile, val to: Tile) : Action {
+        override val cost: Int = 0
+
+        override fun command() = "MOVE $number ${from.x} ${from.y} ${to.x} ${to.y}"
     }
 
-    fun wait(): String {
-        return "WAIT"
+    object Wait : Action {
+        override val cost: Int = 0
+
+        override fun command() = "WAIT"
     }
 
-    fun message(text: String): String {
-        return "MESSAGE $text"
+    class Message(val text: String) : Action {
+        override val cost: Int = 0
+
+        override fun command() = "MESSAGE $text"
     }
 
 }
