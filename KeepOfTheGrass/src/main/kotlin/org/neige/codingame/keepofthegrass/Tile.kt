@@ -17,7 +17,12 @@ class Tile(
     var inRangeOfRecycler: Boolean = false
 
     //Compute
-    var willBecomeGrass: Boolean = false
+    //var zoneDensity: Map<Player?, Int> = emptyMap()
+    //var robotDensity: Map<Player, Int> = emptyMap()
+
+    var pointPotential: Boolean = true
+        get() = field && !grass
+
     var recyclingPotential: Int = 0
 
     val grass: Boolean
@@ -32,14 +37,10 @@ class Tile(
     val empty: Boolean
         get() = free && robot == 0
 
-    fun robotOf(player: Player) = robot.takeIf { this.owner == player } ?: 0
-
-    fun recyclerOf(player: Player) = recycler.takeIf { this.owner == player } ?: false
-
     fun distanceTo(tile: Tile) = abs(this.x - tile.x) + abs(this.y - tile.y)
 
     override fun reset() {
-        willBecomeGrass = false
+        pointPotential = true
         recyclingPotential = 0
     }
 

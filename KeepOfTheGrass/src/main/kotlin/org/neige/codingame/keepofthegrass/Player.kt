@@ -1,7 +1,6 @@
 package org.neige.codingame.keepofthegrass
 
 import kotlin.math.max
-import kotlin.math.min
 
 
 class Player(
@@ -18,68 +17,42 @@ class Player(
     var recyclerNumber: Int = 0
     var robotNumber: Int = 0
     var tileNumber: Int = 0
-    var isolateTile: Int = 0
-    var accessibleTile: Int = 0
-    var _myZone: List<Zone>? = null
-    var _opponentZone: List<Zone>? = null
-
-    val maxOperation: Int
-        get() = matter / 10
-
-    val myZone: List<Zone>
-        get() {
-            _myZone?.let { return it }
-            return game.board.zones
-                .filter { it.player == this }
-                .also { _myZone = it }
-        }
-
-    val opponentZone: List<Zone>
-        get() {
-            _opponentZone?.let { return it }
-            return game.board.zones
-                .filter { it.player != this && it.player != null }
-                .also { _opponentZone = it }
-        }
+    var isolateTile = emptyList<Tile>()
+    var isolatePointPotential = 0
+    var accessibleTile = emptyList<Tile>()
+    var accessiblePointPotential = 0
 
     val behaviour: Behaviour
         get() = when {
             end != null -> Behaviour.FINISH
-            myZone.any { it.borders.keys.any { it.player == opponent } } -> Behaviour.FIGHT
             else -> Behaviour.EXPLORE
         }
-
 
     override fun reset() {
         recyclerNumber = 0
         robotNumber = 0
         tileNumber = 0
-        isolateTile = 0
-        accessibleTile = 0
-        _myZone = null
-        _opponentZone = null
+        isolateTile = emptyList()
+        accessibleTile = emptyList()
     }
 
     override fun compute() {
-        game.board.fields
+        isolateTile = game.board.fields
+            .filter { it.none { it.player == opponent } && it.any { it.player == this } }
+            .flatten()
+            .flatMap { it.tiles }
+        isolatePointPotential = isolateTile.count { it.pointPotential }
+
+        accessibleTile = game.board.fields
             .filter { it.any { it.player == this } }
-            .forEach {
-                val tileNumber = it.sumOf { it.tiles.filter { !it.willBecomeGrass }.size }
-                if (it.all { it.player == null || it.player == this }) {
-                    isolateTile += tileNumber
-                }
-                accessibleTile += tileNumber
-            }
+            .flatten()
+            .flatMap { it.tiles }
+        accessiblePointPotential = accessibleTile.count { it.pointPotential }
     }
 
-    //TODO
-    // handle cost
-    // avoid conflict spawn on recycler
-    // avoid conflict move on recycler
     fun actions(): List<Action> {
         return when (behaviour) {
-            Behaviour.EXPLORE -> explore()
-            Behaviour.FIGHT -> fight()
+            Behaviour.EXPLORE -> play()
             Behaviour.FINISH -> finish()
         }
     }
@@ -87,108 +60,17 @@ class Player(
     /**
      * Explore
      * Move in direction of enemy base
-     * Build to extract resource
+     * Build to extract resource (don't split the field)
      * Spawn for better exploration
      */
-    private fun explore(): List<Action> {
-        //Region Build
-        val builds = mutableListOf<Action.Build>()
-        myZone.map { it.tiles }
-            .flatten()
-            .asSequence()
-            .filter { !it.inRangeOfRecycler && it.empty }
-            .sortedByDescending { it.recyclingPotential }
-            .filter { tile -> builds.none { build -> game.board.tilesInRange(build.tile).any { it == tile } } }
-            .map { Action.Build(it) }
-            .take(min(maxOperation, max(0, 3 - recyclerNumber)))
-            .forEach { builds.add(it) }
-        //EndRegion Build
-
-        //Region Move
-        val opponentTile = opponentZone
-            .map { it.tiles }
-            .flatten()
-
-        val moves = myZone
-            .filter { it.robot > 0 }
-            .flatMap { zone -> zone.tiles.filter { it.robot > 0 }.map { zone to it } }
-            .flatMap { (zone, tile) ->
-                opponentTile
-                    .sortedBy { it.distanceTo(tile) }
-                    .take(tile.robot)
-                    .map {
-                        Action.Move(
-                            number = 1,
-                            from = tile,
-                            to = it
-                        )
-                    }
-            }
-        //EndRegion Move
-
-        //Region Spawns
-        //TODO spawn when more border than robot
-        val spawns = game.board.fields
-            .filter { it.any { it.player == game.opponent(this) } }
-            .flatMap { it.filter { it.player == this } }
-            .flatMap { zone -> zone.borders.flatMap { it.value }.filter { it.inside.robot == 0 } }
-            .map { Action.Spawn(1, it.inside) }
-            .filter { action -> !action.tile.willBecomeGrass && builds.none { it.tile == action.tile } }
-            .take(max(maxOperation - builds.count(), 0))
-        //EndRegion Spawns
+    private fun play(): List<Action> {
+        val builds = extractResource()
+        val moves = explore(builds)
+        val spawns = spawns(builds, moves)
 
         return (moves + spawns + builds)
     }
 
-    //TODO
-    // move to conquer
-    // spawn to fight
-    // build to block (behind robot < opponentRobot)
-    // build don't build somewhere i will lose
-    /**
-     * Fight
-     * Move to conquer
-     * Spawn to fight
-     * Build to block
-     */
-    private fun fight(): List<Action> {
-        val opponentTile = opponentZone
-            .map { it.tiles }
-            .flatten()
-
-        val moves = myZone
-            .filter { it.robot > 0 }
-            .flatMap { zone -> zone.tiles.filter { it.robot > 0 }.map { zone to it } }
-            .flatMap { (zone, tile) ->
-                opponentTile
-                    .sortedBy { it.distanceTo(tile) }
-                    .take(tile.robot)
-                    .map {
-                        Action.Move(
-                            number = 1,
-                            from = tile,
-                            to = it
-                        )
-                    }
-            }
-
-        val danger = game.board.fields
-            .filter { it.any { it.player == game.opponent(this) } }
-            .flatMap { it.filter { it.player == this } }
-            .flatMap { zone -> zone.borders.flatMap { it.value } }
-            .filter { !it.inside.willBecomeGrass }
-
-
-        val spawns = danger.map { Action.Spawn((matter / 10) / danger.size, it.inside) }
-
-        val builds = myZone
-            .flatMap { it.borders.flatMap { it.value }.filter { it.outside.owner != null && it.outside.owner != this && it.inside.empty } }
-            .map { Action.Build(it.inside) }
-
-        return (moves + builds + spawns)
-    }
-
-    // TODO explore & spawn when needed & no more build
     /**
      * Finish explore
      */
@@ -206,17 +88,161 @@ class Player(
                         to = it
                     )
                 }
+            } + game.board.fields
+            .filter { it.any { it.player == this } && it.any { it.player == null } && it.none { it.robot > 0 } }
+            .map { Action.Spawn(1, it.first { it.player == this }.tiles.first()) }
+    }
+
+    private fun remainingOperation(actions: List<Action>): Int {
+        return max(matter - actions.sumOf { it.cost }, 0) / 10
+    }
+
+    private fun extractResource(): List<Action.Build> {
+        val builds = mutableListOf<Action.Build>()
+
+        game.board.fields
+            .asSequence()
+            .filter { field -> field.any { it.player == opponent } }
+            .flatMap { field -> field.filter { it.player == this } }
+            .forEach { zone ->
+                val links = zone.borders
+                    .flatMap { it.value }
+                    .groupBy { it.inside }
+                    .mapValues { it.value.map { it.outside } }
+
+                if (links.count() <= remainingOperation(builds) && links.none { it.key.robot > 0 }) {
+                    val recycled = game.board.recycled(links.keys.toList())
+                    val opponentAccessiblePoint = opponent.accessibleTile.count { tile -> tile.pointPotential && recycled.none { it == tile } }
+                    val isolatePoint = isolatePointPotential + zone.tiles.count { tile -> tile.pointPotential && recycled.none { it == tile } }
+                    if (isolatePoint > opponentAccessiblePoint) {
+                        links.forEach {
+                            builds.add(Action.Build(it.key))
+                        }
+                    }
+                }
             }
+
+        game.board.fields
+            .filter { field -> field.any { it.player == this } && field.any { it.player == opponent } }
+            .forEach { field ->
+                field
+                    .filter { it.player == this }
+                    .forEach { zone ->
+                        zone.tiles.filter { it.owner == this && it.empty && it.recyclingPotential > 20 }
+                            .sortedByDescending { it.recyclingPotential }
+                            .asSequence()
+                            .filter { tile -> !tile.inRangeOfRecycler && game.board.tilesInRange(tile).none { it.inRangeOfRecycler } }
+                            .filter { tile -> builds.none { build -> game.board.tilesInRange(build.tile).any { it == tile } } }
+                            .filter { tile ->
+                                val recycled = game.board.recycled(builds.map { it.tile } + tile)
+                                accessibleTile.count { tile -> tile.pointPotential && recycled.none { it == tile } } >
+                                        opponent.isolateTile.count { tile -> tile.pointPotential && recycled.none { it == tile } }
+                            }
+                            .map { Action.Build(it) }
+                            .takeWhile { remainingOperation(builds) > 0 }
+                            .takeWhile { builds.count() + recyclerNumber <= 3 }
+                            .forEach { builds.add(it) }
+                    }
+            }
+
+        return builds
+    }
+
+    private fun explore(builds: List<Action.Build>): List<Action.Move> {
+        val moves = mutableListOf<Action.Move>()
+        game.board.zones
+            .filter { it.player == this && it.robot > 0 }
+            .flatMap { it.borders.values.flatten().filter { it.inside.robot > 0 } }
+            .groupBy { it.inside }
+            .mapValues { it.value.map { it.outside } }
+            .toList()
+            .sortedBy { it.second.size }
+            .flatMap { link -> (0 until link.first.robot).map { link } }
+            .forEach { (inside, outsides) ->
+                val to = if (outsides.all { it.nextTurnGrass }) {
+                    game.board.tilesInRange(inside).firstOrNull { !it.nextTurnGrass }
+                } else {
+                    outsides
+                        .map { outside ->
+                            Triple(
+                                first = outside,
+                                second = moves.filter { it.to == outside }.sumOf { it.number } - outside.robot,
+                                third = outside.distanceTo(opponent.base)
+                            )
+                        }
+                        .groupBy { it.second }
+                        .minBy { it.key }
+                        .value
+                        .minByOrNull { it.third }
+                        ?.first
+                }
+
+                to?.let {
+                    moves.add(
+                        Action.Move(
+                            number = 1,
+                            from = inside,
+                            to = it
+                        )
+                    )
+                }
+            }
+
+        game.board.fields
+            .filter { it.any { it.player == this && it.robot > 0 } }
+            .forEach { field ->
+                field.filter { it.robot > 0 && it.player == this }
+                    .forEach { zone ->
+                        zone.tiles
+                            .filter { it.robot > 0 }
+                            .filter { tile -> zone.borders.values.flatten().none { it.inside == tile } }
+                            .forEach { tile ->
+                                val fieldTiles = field.flatMap { it.tiles }
+                                val to = fieldTiles
+                                    .filter { it.owner == opponent }
+                                    .ifEmpty { fieldTiles.filter { it.owner == null } }
+                                    .ifEmpty { fieldTiles }
+                                    .minBy { it.distanceTo(tile) }
+                                moves.add(
+                                    Action.Move(
+                                        number = 1,
+                                        from = tile,
+                                        to = to
+                                    )
+                                )
+                            }
+                    }
+            }
+
+        return moves
+    }
+
+    private fun spawns(builds: List<Action.Build>, moves: List<Action.Move>): List<Action.Spawn> {
+        val spawns = mutableListOf<Action.Spawn>()
+        game.board.fields
+            .asSequence()
+            .filter { field -> field.any { it.player == opponent } }
+            .flatMap { field -> field.filter { it.player == this } }
+            .flatMap { zone -> zone.borders.flatMap { it.value } }
+            .groupBy { it.inside }
+            .map { it.key }
+            .filter { !it.nextTurnGrass }
+            .sortedBy {
+                it.distanceTo(opponent.base) + (game.board.tilesInRange(it) + it).sumOf { tileInRange -> tileInRange.robot + (2.takeIf { tileInRange.owner == this } ?: 0) }
+            }
+            .take(remainingOperation(builds))
+            .forEach { spawns.add(Action.Spawn(1, it)) }
+
+        return spawns
     }
 
     override fun debug() = """
         |$behaviour robot($robotNumber) & recycler($recyclerNumber)       
-        |Accessible:$accessibleTile | Isolate:$isolateTile
+        |Accessible:${accessiblePointPotential} | Isolate:${isolatePointPotential}
     """.trimMargin()
 
     enum class Behaviour {
         EXPLORE,
-        FIGHT,
         FINISH,
     }
 

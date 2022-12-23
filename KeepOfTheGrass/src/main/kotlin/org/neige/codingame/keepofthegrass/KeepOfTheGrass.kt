@@ -76,8 +76,8 @@ class KeepOfTheGrass(
             player2.compute()
 
             when {
-                player1.isolateTile > player2.accessibleTile -> End.WINNER to End.LOSER
-                player2.isolateTile > player1.accessibleTile -> End.LOSER to End.WINNER
+                player1.isolatePointPotential > player2.accessiblePointPotential -> End.WINNER to End.LOSER
+                player2.isolatePointPotential > player1.accessiblePointPotential -> End.LOSER to End.WINNER
                 board.fields.map { it.mapNotNull { it.player }.distinct() }.none { it.size > 1 } -> End.DRAW to End.DRAW
                 else -> null to null
             }.also {

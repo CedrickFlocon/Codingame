@@ -11,18 +11,19 @@ class Board(
     //Input
     val grid = Array(width) { x -> Array(height) { y -> Tile(x, y) } }
     val tiles = grid.flatten()
+    val center = width / 2 to height / 2
 
     //Compute
     val zones = mutableListOf<Zone>()
-    val fields = mutableListOf<List<Zone>>()
+    var fields = listOf<List<Zone>>()
     var scrapAmount = 0
-    var maxTile = 0
+    var maxPoint = 0
 
     override fun reset() {
         zones.clear()
-        fields.clear()
+        fields = emptyList()
         scrapAmount = 0
-        maxTile = 0
+        maxPoint = 0
     }
 
     fun tilesInRange(tile: Tile): List<Tile> {
@@ -34,14 +35,33 @@ class Board(
         ).filter { !it.grass }
     }
 
+    fun recycled(recyclers: List<Tile>): List<Tile> {
+        return recyclers
+            .flatMap { recycler -> tilesInRange(recycler).filter { recycler.scrapAmount >= it.scrapAmount } }
+    }
+
     override fun compute() {
+        tiles
+            .filter { !it.grass }
+            .map { tile -> tile to tilesInRange(tile) }
+            .forEach { (tile, tilesInRange) ->
+                tile.recyclingPotential += tile.scrapAmount + tilesInRange.sumOf { min(tile.scrapAmount, it.scrapAmount) }
+
+                if (tile.recycler) tile.pointPotential = false
+                tilesInRange
+                    .filter { tile.recycler && tile.scrapAmount >= it.scrapAmount }
+                    .forEach { it.pointPotential = false }
+            }
+        maxPoint = tiles.count { it.pointPotential }
+
+        //Region Zone
         val zonesAndLinks = tiles
             .asSequence()
             .filter { it.free }
-            .filter { tiles -> zones.none { it.tiles.any { it == tiles } } }
+            .filter { tile -> zones.none { it.tiles.any { it == tile } } }
             .map { origin ->
                 val tiles = mutableSetOf<Tile>()
-                val borderTiles = mutableSetOf<Link>()
+                val borderLinks = mutableSetOf<Link>()
                 var scrapAmount = 0
                 var tilesNumber = 0
                 var robotNumber = 0
@@ -59,17 +79,12 @@ class Board(
                     tiles.add(tileToInspect)
 
                     inRange
-                        .onEach {
-                            if (it.recycler && it.scrapAmount >= tileToInspect.scrapAmount) {
-                                tileToInspect.willBecomeGrass = true
-                            }
-                        }
                         .filter { tileInRange -> tileInRange.free && !tiles.contains(tileInRange) && !toInspect.contains(tileInRange) }
                         .forEach { tileInRange ->
                             if (tileInRange.owner == origin.owner) {
                                 toInspect.push(tileInRange)
                             } else {
-                                borderTiles.add(Link(tileToInspect, tileInRange))
+                                borderLinks.add(Link(tileToInspect, tileInRange))
                             }
                         }
                 }
@@ -79,7 +94,7 @@ class Board(
                     scrapAmount = scrapAmount,
                     player = origin.owner,
                     robot = robotNumber,
-                )).also { zones.add(it) } to borderTiles
+                )).also { zones.add(it) } to borderLinks
             }
             .toList()
 
@@ -88,18 +103,15 @@ class Board(
                 zone.borders = borders
                     .map { link -> zonesAndLinks.first { it.first.tiles.any { it == link.outside } }.first to link }
                     .groupBy { it.first }
-                    .mapValues {
-                        it.value.map { it.second }
-                    }
+                    .mapValues { it.value.map { it.second } }
             }
 
-        fields.addAll(zones.map { it.fieldZone }.distinct().toMutableList())
-
-        maxTile = tiles.count { !it.willBecomeGrass }
+        fields = zones.map { it.fieldZone }.distinct().toMutableList()
+        //EndRegion
     }
 
     override fun debug() = """
-        |Board ($maxTile) 
+        |Board ($maxPoint) 
         |${zones.joinToString("\n") { "=>${it.debug()}" }}
         """.trimMargin()
 
