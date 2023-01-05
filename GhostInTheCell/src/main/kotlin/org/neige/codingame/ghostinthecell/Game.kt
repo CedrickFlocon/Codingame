@@ -69,9 +69,9 @@ class Game(private val input: Scanner, private val factories: Array<Factory>) {
         Log.debug(this.toString())
 
         val warningFactories = factories
-                .flatMap { factory -> factory.bombs.filter { it.diplomacy == Diplomacy.ENEMY } }
-                .flatMap { bomb -> bomb.from.links.filter { it.distance == bomb.distanceTraveled && it.to.diplomacy == Diplomacy.ALLY } }
-                .map { it.to }
+            .flatMap { factory -> factory.bombs.filter { it.diplomacy == Diplomacy.ENEMY } }
+            .flatMap { bomb -> bomb.from.links.filter { it.distance == bomb.distanceTraveled && it.to.diplomacy == Diplomacy.ALLY } }
+            .map { it.to }
 
         factories.forEach {
             it.buildCoefficient(warningFactories.contains(it))
@@ -84,56 +84,56 @@ class Game(private val input: Scanner, private val factories: Array<Factory>) {
 
         if ((turnCount == 0 || turnCount >= 5) && Factory.canLaunchBomb()) {
             factories
-                    .filter { it.diplomacy == Diplomacy.ENEMY }
-                    .filter { it.safeness < 0 && it.cyborgsProduction > 0 }
-                    .filter { factory -> factory.bombs.none { it.to == factory && it.diplomacy == Diplomacy.ALLY } }
-                    .sortedByDescending { it.cyborgsProduction }
-                    .take(Factory.BOMB_COUNT)
-                    .forEach { enemyFactory ->
-                        enemyFactory.links
-                                .filter { it.to.diplomacy == Diplomacy.ALLY }
-                                .minByOrNull { it.distance }?.let {
-                                    actions.add(it.to.bombFactory(enemyFactory))
-                                }
-                    }
+                .filter { it.diplomacy == Diplomacy.ENEMY }
+                .filter { it.safeness < 0 && it.cyborgsProduction > 0 }
+                .filter { factory -> factory.bombs.none { it.to == factory && it.diplomacy == Diplomacy.ALLY } }
+                .sortedByDescending { it.cyborgsProduction }
+                .take(Factory.BOMB_COUNT)
+                .forEach { enemyFactory ->
+                    enemyFactory.links
+                        .filter { it.to.diplomacy == Diplomacy.ALLY }
+                        .minByOrNull { it.distance }?.let {
+                            actions.add(it.to.bombFactory(enemyFactory))
+                        }
+                }
         }
 
         if (allyCyborgs / (allyCyborgs + enemyCyborgs).toFloat() > 0.40 && factories.none { it.diplomacy == Diplomacy.NEUTRAL && it.cyborgsProduction > 0 && it.cyborgsNumber <= 10 }) {
             factories
-                    .asSequence()
-                    .filter { it.diplomacy == Diplomacy.ALLY }
-                    .filter { !it.nearBomb }
-                    .filter { it.cyborgsNumber >= 10 }
-                    .filter { it.safeness > 0 }
-                    .filter { it.cyborgsProjection > 10 }
-                    .filter { it.cyborgsProduction < 3 }
-                    .sortedByDescending { it.safeness }
-                    .take(1)
-                    .forEach {
-                        actions.add(it.increase())
-                    }
+                .asSequence()
+                .filter { it.diplomacy == Diplomacy.ALLY }
+                .filter { !it.nearBomb }
+                .filter { it.cyborgsNumber >= 10 }
+                .filter { it.safeness > 0 }
+                .filter { it.cyborgsProjection > 10 }
+                .filter { it.cyborgsProduction < 3 }
+                .sortedByDescending { it.safeness }
+                .take(1)
+                .forEach {
+                    actions.add(it.increase())
+                }
         }
 
         factories
-                .filter { it.diplomacy == Diplomacy.ALLY }
-                .flatMap { it.links }
-                .sortedByDescending { it.to.attractiveness * 1 / it.distance + it.to.safeness / 10 }
-                .asSequence()
-                .filter { it.from.cyborgsNumber > 0 && it.from.cyborgsProjection > 0 }
-                .filter { it.to.diplomacy != Diplomacy.ALLY || (it.to.cyborgsProduction < 3) }
-                .filter { it.to.diplomacy != Diplomacy.NEUTRAL || (it.from.cyborgsNumber > it.to.cyborgsNumber && it.to.cyborgsNumber >= it.to.cyborgsProjection) }
-                .filter { it.to.diplomacy != Diplomacy.ENEMY || (it.to.cyborgsNumber < it.from.cyborgsNumber && it.to.cyborgsProjection <= it.to.cyborgsNumber) }
-                .toList()
-                .forEach {
-                    val cyborgsNumber = when {
-                        it.from.nearBomb -> it.to.cyborgsNumber
-                        it.to.diplomacy == Diplomacy.ALLY -> it.to.cyborgsProjection.roundToInt().absoluteValue
-                        it.to.diplomacy == Diplomacy.NEUTRAL -> it.to.cyborgsNumber - it.to.cyborgsProjection.roundToInt() + 1
-                        it.to.diplomacy == Diplomacy.ENEMY -> if (it.from.safeness > 0) it.from.cyborgsNumber else it.distance * it.to.cyborgsProduction + it.to.cyborgsNumber
-                        else -> 0
-                    }
-                    actions.add(it.from.moveFactory(it.to, cyborgsNumber))
+            .filter { it.diplomacy == Diplomacy.ALLY }
+            .flatMap { it.links }
+            .sortedByDescending { it.to.attractiveness * 1 / it.distance + it.to.safeness / 10 }
+            .asSequence()
+            .filter { it.from.cyborgsNumber > 0 && it.from.cyborgsProjection > 0 }
+            .filter { it.to.diplomacy != Diplomacy.ALLY || (it.to.cyborgsProduction < 3) }
+            .filter { it.to.diplomacy != Diplomacy.NEUTRAL || (it.from.cyborgsNumber > it.to.cyborgsNumber && it.to.cyborgsNumber >= it.to.cyborgsProjection) }
+            .filter { it.to.diplomacy != Diplomacy.ENEMY || (it.to.cyborgsNumber < it.from.cyborgsNumber && it.to.cyborgsProjection <= it.to.cyborgsNumber) }
+            .toList()
+            .forEach {
+                val cyborgsNumber = when {
+                    it.from.nearBomb -> it.to.cyborgsNumber
+                    it.to.diplomacy == Diplomacy.ALLY -> it.to.cyborgsProjection.roundToInt().absoluteValue
+                    it.to.diplomacy == Diplomacy.NEUTRAL -> it.to.cyborgsNumber - it.to.cyborgsProjection.roundToInt() + 1
+                    it.to.diplomacy == Diplomacy.ENEMY -> if (it.from.safeness > 0) it.from.cyborgsNumber else it.distance * it.to.cyborgsProduction + it.to.cyborgsNumber
+                    else -> 0
                 }
+                actions.add(it.from.moveFactory(it.to, cyborgsNumber))
+            }
 
         return actions
     }
@@ -159,6 +159,7 @@ class Game(private val input: Scanner, private val factories: Array<Factory>) {
                 enemyCyborgs += cyborgsNumber
                 enemyProduction += if (turnProductionStop == 0) cyborgsProduction else 0
             }
+            Diplomacy.NEUTRAL -> {}
         }
 
         factories[entityId].newTurn(diplomacy, cyborgsNumber, cyborgsProduction, if (turnProductionStop == 0) null else turnProductionStop)
@@ -169,6 +170,7 @@ class Game(private val input: Scanner, private val factories: Array<Factory>) {
         when (diplomacy) {
             Diplomacy.ALLY -> allyCyborgs += cyborgsNumber
             Diplomacy.ENEMY -> enemyCyborgs += cyborgsNumber
+            Diplomacy.NEUTRAL -> {}
         }
 
         val troop = Troop(entityId, diplomacy, from, to, cyborgsNumber, remainingDistance)
