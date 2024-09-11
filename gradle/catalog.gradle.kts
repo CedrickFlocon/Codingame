@@ -1,19 +1,19 @@
 dependencyResolutionManagement {
     versionCatalogs {
         create("lib") {
-            version("kotlin", "1.7.20")
-            alias("kotlin-stdlib").to("org.jetbrains.kotlin", "kotlin-stdlib").versionRef("kotlin")
+            version("kotlin", "2.0.20")
+            library("kotlin-stdlib", "org.jetbrains.kotlin", "kotlin-stdlib").versionRef("kotlin")
         }
 
         create("test") {
-            version("kotest", "5.3.2")
-            alias("kotest").to("io.kotest", "kotest-runner-junit5").versionRef("kotest")
+            version("kotest", "5.9.1")
+            library("kotest", "io.kotest", "kotest-runner-junit5").versionRef("kotest")
 
-            version("mockk", "1.12.4")
-            alias("mockk").to("io.mockk", "mockk").versionRef("mockk")
+            version("mockk", "1.13.12")
+            library("mockk", "io.mockk", "mockk").versionRef("mockk")
 
-            version("truth", "1.1.3")
-            alias("truth").to("com.google.truth", "truth").versionRef("truth")
+            version("truth", "1.4.4")
+            library("truth", "com.google.truth", "truth").versionRef("truth")
         }
     }
 }
