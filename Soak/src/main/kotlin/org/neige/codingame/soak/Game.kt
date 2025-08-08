@@ -4,11 +4,14 @@ import org.neige.codingame.geometry.Coordinate
 import org.neige.codingame.geometry.Vector
 import kotlin.math.max
 
-class Game(
-) {
+class Game() {
     val agents = mutableMapOf<Int, Agent>()
-    lateinit var opponentAgents: Map<Int, Agent>
-    lateinit var myAgents: Map<Int, Agent>
+
+    val opponentAgents: Map<Int, Agent>
+        get() = agents.filter { it.value.player == Player.OPPONENT }
+
+    val myAgents: Map<Int, Agent>
+        get() = agents.filter { it.value.player == Player.ME }
 
     private lateinit var size: Size
     private lateinit var grid: Map<Coordinate, Tile>
@@ -41,12 +44,26 @@ class Game(
                 }
             }
         }
-
-        opponentAgents = agents.filter { it.value.player == Player.OPPONENT }
-        myAgents = agents.filter { it.value.player == Player.ME }
     }
 
     fun play() {
+        val cluster = grid.values
+            .mapNotNull { tile ->
+                val adjacentAgent = (ADJACENT.map { move -> agents.values.firstOrNull { it.coordinate == (tile.coordinate + move) } } +
+                        agents.values.firstOrNull { it.coordinate == tile.coordinate }).filterNotNull()
+
+                (tile to adjacentAgent).takeIf { adjacentAgent.isNotEmpty() }
+            }
+            .filter { it.second.none { it.player == Player.ME } }
+            .maxByOrNull { it.second.size }!!
+
+        myAgents.forEach {
+            it.value.execute(Action.Move(cluster.first.coordinate), Action.Combat.Throw(cluster.first.coordinate))
+        }
+    }
+
+    //Wood 2 objective
+    fun bestCoverAndFire() {
         val maxDamageReduction = grid
             .mapNotNull { it.value as? Tile.Empty }
             .groupBy { tile ->
@@ -69,10 +86,8 @@ class Game(
                     .first()
 
                 agent.execute(
-                    listOf(
-                        Action.Move(bestCover.coordinate),
-                        Action.Shoot(minDamageReduction),
-                    )
+                    Action.Move(bestCover.coordinate),
+                    Action.Combat.Shoot(minDamageReduction),
                 )
             }
     }
@@ -102,6 +117,13 @@ class Game(
         private val DOWN = Vector(0, 1)
         private val RIGHT = Vector(1, 0)
         private val LEFT = Vector(-1, 0)
+
+        private val ADJACENT = listOf(
+            UP, UP + RIGHT, UP + LEFT,
+            DOWN, DOWN + RIGHT, DOWN + LEFT,
+            RIGHT,
+            LEFT
+        )
 
         private val COVER_COMPUTATION = listOf(
             UP to UP_LAMBDA,

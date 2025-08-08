@@ -19,7 +19,12 @@ fun main(args: Array<String>) {
         val splashBombs = input.nextInt() // Number of splash bombs this can throw this game
 
         game.agents[agentId] = Agent(
-            id = agentId, player = if (player == myId) Player.ME else Player.OPPONENT, optimalRange = optimalRange, soakingPower = soakingPower
+            id = agentId,
+            player = if (player == myId) Player.ME else Player.OPPONENT,
+            optimalRange = optimalRange,
+            soakingPower = soakingPower,
+            splashBombs = splashBombs,
+            cooldown = shootCooldown,
         )
     }
 
@@ -55,6 +60,8 @@ fun main(args: Array<String>) {
             game.agents[agentId]!!.let {
                 it.coordinate = Coordinate(x, y)
                 it.wetness = wetness
+                it.splashBombs = splashBombs
+                it.cooldown = cooldown
             }
         }
         game.agents.values.removeAll { it.wetness >= 100 }

@@ -8,10 +8,12 @@ data class Agent(
     var coordinate: Coordinate = Coordinate(0, 0),
     val optimalRange: Int,
     val soakingPower: Int,
-    var wetness: Int = 0
+    var wetness: Int = 0,
+    var splashBombs: Int = 0,
+    var cooldown: Int = 0,
 ) {
-    fun execute(actions: List<Action>) {
-        println("$id; ${actions.joinToString(";")}")
+    fun execute(move: Action.Move?, combat: Action.Combat?) {
+        println("$id; ${listOfNotNull(move, combat).joinToString(";")}")
     }
 }
 
@@ -27,9 +29,17 @@ sealed interface Action {
         }
     }
 
-    data class Shoot(private val agent: Agent) : Action {
-        override fun toString(): String {
-            return "SHOOT ${agent.id}"
+    sealed interface Combat : Action {
+        data class Shoot(private val agent: Agent) : Combat {
+            override fun toString(): String {
+                return "SHOOT ${agent.id}"
+            }
+        }
+
+        data class Throw(private val coordinate: Coordinate) : Combat {
+            override fun toString(): String {
+                return "THROW ${coordinate.x} ${coordinate.y}"
+            }
         }
     }
 }
