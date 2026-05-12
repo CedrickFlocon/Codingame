@@ -8,7 +8,6 @@ repositories {
 
 dependencies {
     implementation(lib.kotlin.stdlib)
-    implementation(project(":Geometry"))
 
     testImplementation(test.kotest)
     testImplementation(test.mockk)

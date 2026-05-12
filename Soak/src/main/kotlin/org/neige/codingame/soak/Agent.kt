@@ -1,7 +1,5 @@
 package org.neige.codingame.soak
 
-import org.neige.codingame.geometry.Coordinate
-
 data class Agent(
     val id: Int,
     val player: Player,
@@ -11,9 +9,39 @@ data class Agent(
     var wetness: Int = 0,
     var splashBombs: Int = 0,
     var cooldown: Int = 0,
+    var actions: List<Action> = emptyList()
 ) {
-    fun execute(move: Action.Move?, combat: Action.Combat?) {
-        println("$id; ${listOfNotNull(move, combat).joinToString(";")}")
+
+    private val halfSoakingPower = soakingPower / 2
+
+    fun update(
+        coordinate: Coordinate,
+        wetness: Int,
+        splashBombs: Int,
+        cooldown: Int,
+    ) {
+        this.coordinate = coordinate
+        this.wetness = wetness
+        this.splashBombs = splashBombs
+        this.cooldown = cooldown
+        this.actions = emptyList()
+    }
+
+    fun shotPower(coordinate: Coordinate): Int {
+        return (this.coordinate.distanceFrom(coordinate) / optimalRange).let {
+            if (it <= 1) {
+                soakingPower
+            } else if (it <= 2) {
+                halfSoakingPower
+            } else {
+                0
+            }
+        }
+    }
+
+    fun execute(move: Action.Move? = null, combat: Action.Combat? = null, message: Action.Message? = null) {
+        this.actions = listOfNotNull(move, combat, message)
+        println("$id; ${actions.joinToString(";")}")
     }
 }
 
@@ -40,6 +68,18 @@ sealed interface Action {
             override fun toString(): String {
                 return "THROW ${coordinate.x} ${coordinate.y}"
             }
+        }
+
+        object HunkerDown : Combat {
+            override fun toString(): String {
+                return "HUNKER_DOWN"
+            }
+        }
+    }
+
+    data class Message(val text: String) : Action {
+        override fun toString(): String {
+            return text
         }
     }
 }

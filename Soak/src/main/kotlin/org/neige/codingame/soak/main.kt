@@ -1,6 +1,5 @@
 package org.neige.codingame.soak
 
-import org.neige.codingame.geometry.Coordinate
 import java.util.*
 
 val game = Game()
@@ -57,12 +56,12 @@ fun main(args: Array<String>) {
             val splashBombs = input.nextInt()
             val wetness = input.nextInt() // Damage (0-100) this agent has taken
 
-            game.agents[agentId]!!.let {
-                it.coordinate = Coordinate(x, y)
-                it.wetness = wetness
-                it.splashBombs = splashBombs
-                it.cooldown = cooldown
-            }
+            game.agents[agentId]!!.update(
+                coordinate = Coordinate(x, y),
+                wetness = wetness,
+                splashBombs = splashBombs,
+                cooldown = cooldown
+            )
         }
         game.agents.values.removeAll { it.wetness >= 100 }
 

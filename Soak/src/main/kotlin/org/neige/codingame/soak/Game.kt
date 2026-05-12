@@ -1,7 +1,5 @@
 package org.neige.codingame.soak
 
-import org.neige.codingame.geometry.Coordinate
-import org.neige.codingame.geometry.Vector
 import kotlin.math.max
 
 class Game() {
@@ -9,9 +7,12 @@ class Game() {
 
     val opponentAgents: Map<Int, Agent>
         get() = agents.filter { it.value.player == Player.OPPONENT }
+    private lateinit var opponentSideX: IntRange
 
     val myAgents: Map<Int, Agent>
         get() = agents.filter { it.value.player == Player.ME }
+    private lateinit var mySideX: IntRange
+    private lateinit var myBestPositions: List<Coordinate>
 
     private lateinit var size: Size
     private lateinit var grid: Map<Coordinate, Tile>
@@ -44,22 +45,43 @@ class Game() {
                 }
             }
         }
+
+        if (myAgents.all { it.value.coordinate.x == 0 }) {
+            this.mySideX = 0 until (size.width / 2)
+            this.opponentSideX = size.width / 2 until size.width
+        } else {
+            this.mySideX = size.width / 2 until size.width
+            this.opponentSideX = 0 until (size.width / 2)
+        }
+
+        this.myBestPositions = this.grid.filterKeys { it.x in mySideX }
+            .mapNotNull { it.value as? Tile.Empty }
+            .map {
+                it.coordinate to it.damageReductionFrom.filter { it.key.x in opponentSideX }
+                    .values
+                    .average()
+            }
+            .filter { !it.second.isNaN() }
+            .sortedByDescending { it.second - ((size.width / 2) - it.first.x) }
+            .onEach { System.err.print(it) }
+            .map { it.first }
     }
 
     fun play() {
-        val cluster = grid.values
-            .mapNotNull { tile ->
-                val adjacentAgent = (ADJACENT.map { move -> agents.values.firstOrNull { it.coordinate == (tile.coordinate + move) } } +
-                        agents.values.firstOrNull { it.coordinate == tile.coordinate }).filterNotNull()
-
-                (tile to adjacentAgent).takeIf { adjacentAgent.isNotEmpty() }
+        myBestPositions
+            .take(myAgents.count())
+            .forEach { bestCoordinate ->
+                val closestAgent = myAgents.filter { it.value.actions.isEmpty() }
+                    .minBy { it.value.coordinate.distanceFrom(bestCoordinate) }
+                closestAgent.value.execute(Action.Move(bestCoordinate))
             }
-            .filter { it.second.none { it.player == Player.ME } }
-            .maxByOrNull { it.second.size }!!
 
-        myAgents.forEach {
-            it.value.execute(Action.Move(cluster.first.coordinate), Action.Combat.Throw(cluster.first.coordinate))
-        }
+        //sort best cover closest to the middle
+        //give this move to the closest agent
+        //then combat
+        //check best dps then do
+
+        //Side job compute turn score
     }
 
     //Wood 2 objective
@@ -79,7 +101,7 @@ class Game() {
                 val bestCover = maxDamageReduction.minBy { agent.coordinate.distanceFrom(it.coordinate) }
 
                 val minDamageReduction = opponentAgents.values
-                    .filter { it.coordinate.distanceFrom(bestCover.coordinate) < size.width / 2 }
+                    .filter { it.coordinate.distanceFrom(bestCover.coordinate) < (size.width + size.height) / 2 }
                     .groupBy { (grid[it.coordinate] as Tile.Empty).damageReductionFrom.getOrDefault(agent.coordinate, 0f) }
                     .minBy { it.key }
                     .value
@@ -90,6 +112,23 @@ class Game() {
                     Action.Combat.Shoot(minDamageReduction),
                 )
             }
+    }
+
+    //Wood 1 objective
+    fun throwBomb() {
+        val cluster = grid.values
+            .mapNotNull { tile ->
+                val adjacentAgent = (ADJACENT.map { move -> agents.values.firstOrNull { it.coordinate == (tile.coordinate + move) } } +
+                        agents.values.firstOrNull { it.coordinate == tile.coordinate }).filterNotNull()
+
+                (tile to adjacentAgent).takeIf { adjacentAgent.isNotEmpty() }
+            }
+            .filter { it.second.none { it.player == Player.ME } }
+            .maxByOrNull { it.second.size }!!
+
+        myAgents.forEach {
+            it.value.execute(Action.Move(cluster.first.coordinate), Action.Combat.Throw(cluster.first.coordinate))
+        }
     }
 
     companion object {
@@ -168,7 +207,7 @@ sealed interface Tile {
         val damageReductionFrom: Map<Coordinate, Float>
     ) : Tile {
         override fun toString(): String {
-            return "$coordinate"
+            return "$coordinate ${damageReductionFrom.asSequence().groupBy { it.value }.mapValues { it.value.map { it.key } }.toList().joinToString("\n")}"
         }
     }
 }
